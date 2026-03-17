@@ -61,11 +61,7 @@ const SearchTab = ({ onSelectCompany }: SearchTabProps) => {
                 onClick={() => onSelectCompany(company)}
                 className="w-full text-left flex items-center gap-3 p-3.5 rounded-xl bg-secondary/60 border border-border/60 active:scale-[0.98] transition-transform"
               >
-                <div className="w-11 h-11 rounded-xl bg-secondary border border-border flex items-center justify-center shrink-0">
-                  <span className="text-base font-bold font-['Space_Grotesk'] text-foreground">
-                    {company.name.charAt(0)}
-                  </span>
-                </div>
+                <CompanyLogo domain={company.domain} name={company.name} size="sm" />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-semibold text-foreground truncate font-['Space_Grotesk']">

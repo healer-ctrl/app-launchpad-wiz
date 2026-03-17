@@ -49,11 +49,7 @@ const BookmarksTab = ({ bookmarkedCompanies, onSelectCompany, onRemoveBookmark }
                   onClick={() => onSelectCompany(company)}
                   className="flex items-center gap-3 flex-1 min-w-0 text-left"
                 >
-                  <div className="w-11 h-11 rounded-xl bg-secondary border border-border flex items-center justify-center shrink-0">
-                    <span className="text-base font-bold font-['Space_Grotesk'] text-foreground">
-                      {company.name.charAt(0)}
-                    </span>
-                  </div>
+                  <CompanyLogo domain={company.domain} name={company.name} size="sm" />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-semibold text-foreground truncate font-['Space_Grotesk']">
