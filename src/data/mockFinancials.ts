@@ -145,5 +145,5 @@ export const companies: CompanyData[] = [
     quarter: "Q4 2025",
     changePercent: 2.9,
     accentColor: "4 80% 55%",
-  },
+    categories: ["us", "tech"],
 ];
