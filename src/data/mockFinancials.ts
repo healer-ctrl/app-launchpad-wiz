@@ -67,7 +67,7 @@ export const companies: CompanyData[] = [
     quarter: "Q4 2025",
     changePercent: -1.2,
     accentColor: "0 72% 56%",
-  },
+    categories: ["us"],
   {
     id: "msft",
     name: "Microsoft",
