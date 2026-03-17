@@ -19,6 +19,8 @@ const SectionTitle = ({ icon: Icon, title }: { icon: React.ElementType; title: s
 const CompanyDeepDive = ({ company, onBack }: CompanyDeepDiveProps) => {
   const data = deepDiveData[company.id];
   const isPositive = company.changePercent >= 0;
+  const dragX = useMotionValue(0);
+  const pageOpacity = useTransform(dragX, [0, 150], [1, 0.7]);
 
   if (!data) return null;
 
