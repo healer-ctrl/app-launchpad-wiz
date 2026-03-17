@@ -43,6 +43,7 @@ export const companies: CompanyData[] = [
     changePercent: 1.1,
     accentColor: "220 80% 60%",
     categories: ["india"],
+  },
   {
     id: "infy",
     name: "Infosys",
