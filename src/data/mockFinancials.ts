@@ -135,6 +135,7 @@ export const companies: CompanyData[] = [
     changePercent: -0.3,
     accentColor: "210 65% 50%",
     categories: ["india", "banking"],
+    domain: "hdfcbank.com",
   },
   {
     id: "nvda",
