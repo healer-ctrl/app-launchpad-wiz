@@ -54,7 +54,7 @@ export const companies: CompanyData[] = [
     quarter: "Q3 FY2026",
     changePercent: 3.8,
     accentColor: "200 70% 55%",
-  },
+    categories: ["india", "tech"],
   {
     id: "tsla",
     name: "Tesla",
