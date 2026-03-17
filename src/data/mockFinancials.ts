@@ -105,6 +105,7 @@ export const companies: CompanyData[] = [
     changePercent: 0.8,
     accentColor: "280 60% 55%",
     categories: ["india", "tech"],
+    domain: "tcs.com",
   },
   {
     id: "amzn",
