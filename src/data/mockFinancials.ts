@@ -28,7 +28,7 @@ export const companies: CompanyData[] = [
     quarter: "Q1 FY2026",
     changePercent: 2.4,
     accentColor: "174 100% 50%",
-  },
+    categories: ["us", "tech"],
   {
     id: "reliance",
     name: "Reliance Industries",
