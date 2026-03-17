@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, TrendingUp, TrendingDown } from "lucide-react";
 import { companies, type CompanyData } from "@/data/mockFinancials";
+import CompanyLogo from "@/components/CompanyLogo";
 
 interface SearchTabProps {
   onSelectCompany: (company: CompanyData) => void;
