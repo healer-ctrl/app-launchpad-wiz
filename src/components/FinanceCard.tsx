@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import { motion, useMotionValue, useTransform, AnimatePresence } from "framer-motion";
 import { TrendingUp, TrendingDown, FileText, Bookmark } from "lucide-react";
 import type { CompanyData } from "@/data/mockFinancials";
+import CompanyLogo from "@/components/CompanyLogo";
 
 interface FinanceCardProps {
   company: CompanyData;
@@ -106,11 +107,7 @@ const FinanceCard = ({ company, onReadReport, onSwipeLeft, onBookmark, isBookmar
 
         {/* Company header */}
         <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-secondary flex items-center justify-center border border-border">
-            <span className="text-xl font-bold font-['Space_Grotesk'] text-foreground">
-              {company.name.charAt(0)}
-            </span>
-          </div>
+          <CompanyLogo domain={company.domain} name={company.name} size="md" />
           <div className="flex-1 min-w-0">
             <h2 className="text-xl font-bold font-['Space_Grotesk'] text-foreground truncate">
               {company.name}

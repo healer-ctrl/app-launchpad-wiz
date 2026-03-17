@@ -13,6 +13,7 @@ export interface CompanyData {
   changePercent: number;
   accentColor: string;
   categories: CompanyCategory[];
+  domain: string;
 }
 
 export const companies: CompanyData[] = [
@@ -29,6 +30,7 @@ export const companies: CompanyData[] = [
     changePercent: 2.4,
     accentColor: "174 100% 50%",
     categories: ["us", "tech"],
+    domain: "apple.com",
   },
   {
     id: "reliance",
@@ -43,6 +45,7 @@ export const companies: CompanyData[] = [
     changePercent: 1.1,
     accentColor: "220 80% 60%",
     categories: ["india"],
+    domain: "ril.com",
   },
   {
     id: "infy",
@@ -57,6 +60,7 @@ export const companies: CompanyData[] = [
     changePercent: 3.8,
     accentColor: "200 70% 55%",
     categories: ["india", "tech"],
+    domain: "infosys.com",
   },
   {
     id: "tsla",
@@ -71,6 +75,7 @@ export const companies: CompanyData[] = [
     changePercent: -1.2,
     accentColor: "0 72% 56%",
     categories: ["us"],
+    domain: "tesla.com",
   },
   {
     id: "msft",
@@ -85,6 +90,7 @@ export const companies: CompanyData[] = [
     changePercent: 4.2,
     accentColor: "174 100% 50%",
     categories: ["us", "tech"],
+    domain: "microsoft.com",
   },
   {
     id: "tcs",
@@ -99,6 +105,7 @@ export const companies: CompanyData[] = [
     changePercent: 0.8,
     accentColor: "280 60% 55%",
     categories: ["india", "tech"],
+    domain: "tcs.com",
   },
   {
     id: "amzn",
@@ -113,6 +120,7 @@ export const companies: CompanyData[] = [
     changePercent: 5.1,
     accentColor: "38 90% 55%",
     categories: ["us", "tech"],
+    domain: "amazon.com",
   },
   {
     id: "hdfc",
@@ -127,6 +135,7 @@ export const companies: CompanyData[] = [
     changePercent: -0.3,
     accentColor: "210 65% 50%",
     categories: ["india", "banking"],
+    domain: "hdfcbank.com",
   },
   {
     id: "nvda",
@@ -141,6 +150,7 @@ export const companies: CompanyData[] = [
     changePercent: 7.3,
     accentColor: "85 75% 50%",
     categories: ["us", "tech"],
+    domain: "nvidia.com",
   },
   {
     id: "googl",
@@ -155,5 +165,6 @@ export const companies: CompanyData[] = [
     changePercent: 2.9,
     accentColor: "4 80% 55%",
     categories: ["us", "tech"],
+    domain: "google.com",
   },
 ];

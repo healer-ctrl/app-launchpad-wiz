@@ -3,6 +3,7 @@ import { motion, useMotionValue, useTransform } from "framer-motion";
 import { ArrowLeft, Building2, TrendingUp, TrendingDown, BarChart3, Grid3X3, Newspaper, BookOpen } from "lucide-react";
 import type { CompanyData } from "@/data/mockFinancials";
 import { deepDiveData } from "@/data/companyDeepDive";
+import CompanyLogo from "@/components/CompanyLogo";
 
 interface CompanyDeepDiveProps {
   company: CompanyData;
@@ -84,11 +85,7 @@ const CompanyDeepDive = ({ company, onBack }: CompanyDeepDiveProps) => {
         <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
           <SectionTitle icon={Building2} title="Company Overview" />
           <div className="flex items-center gap-4 mb-4">
-            <div className="w-16 h-16 rounded-2xl bg-secondary flex items-center justify-center border border-border">
-              <span className="text-2xl font-bold font-['Space_Grotesk'] text-foreground">
-                {company.name.charAt(0)}
-              </span>
-            </div>
+            <CompanyLogo domain={company.domain} name={company.name} size="lg" />
             <div className="flex-1 min-w-0">
               <h2 className="text-xl font-bold font-['Space_Grotesk'] text-foreground">{company.name}</h2>
               <p className="text-xs text-muted-foreground">{overview.sector} · {overview.industry}</p>
