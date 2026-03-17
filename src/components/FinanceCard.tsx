@@ -101,7 +101,7 @@ const FinanceCard = ({ company, index, totalCount, onReadReport, onSwipeLeft, on
           <span className="text-xs font-medium tracking-widest uppercase px-3 py-1.5 rounded-full border border-border bg-secondary text-muted-foreground">
             {company.quarter}
           </span>
-          {bookmarked && (
+          {isBookmarked && (
             <Bookmark className="w-3.5 h-3.5 text-primary fill-primary" />
           )}
         </motion.div>
