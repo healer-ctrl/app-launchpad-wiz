@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { Bookmark, TrendingUp, TrendingDown } from "lucide-react";
 import type { CompanyData } from "@/data/mockFinancials";
+import CompanyLogo from "@/components/CompanyLogo";
 
 interface BookmarksTabProps {
   bookmarkedCompanies: CompanyData[];
