@@ -6,13 +6,15 @@ import type { CompanyData } from "@/data/mockFinancials";
 interface FinanceCardProps {
   company: CompanyData;
   index: number;
+  totalCount: number;
   onReadReport?: () => void;
   onSwipeLeft?: () => void;
+  onBookmark?: () => void;
+  isBookmarked?: boolean;
 }
 
-const FinanceCard = ({ company, index, onReadReport, onSwipeLeft }: FinanceCardProps) => {
+const FinanceCard = ({ company, index, totalCount, onReadReport, onSwipeLeft, onBookmark, isBookmarked = false }: FinanceCardProps) => {
   const isPositive = company.changePercent >= 0;
-  const [bookmarked, setBookmarked] = useState(false);
   const [showBookmarkAnim, setShowBookmarkAnim] = useState(false);
   const x = useMotionValue(0);
   const cardRef = useRef<HTMLDivElement>(null);
