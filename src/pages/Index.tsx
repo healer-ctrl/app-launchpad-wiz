@@ -113,8 +113,6 @@ const Index = () => {
               <FinanceCard
                 key={company.id}
                 company={company}
-                index={activeIndex}
-                totalCount={filteredCompanies.length}
                 onReadReport={() => setReportCompany(company)}
                 onSwipeLeft={() => setDeepDiveCompany(company)}
                 onBookmark={() => toggleBookmark(company.id)}

@@ -192,19 +192,6 @@ const FinanceCard = ({ company, onReadReport, onSwipeLeft, onBookmark, isBookmar
           <span className="text-[10px] text-muted-foreground/50">← swipe for deep dive</span>
         </motion.div>
 
-        {/* Scroll indicator */}
-        <div className="flex justify-center pt-2">
-          <div className="flex gap-1.5">
-            {Array.from({ length: totalCount }).map((_, i) => (
-              <div
-                key={i}
-                className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
-                  i === index ? "bg-primary w-4" : "bg-muted-foreground/30"
-                }`}
-              />
-            ))}
-          </div>
-        </div>
       </motion.div>
     </div>
   );
