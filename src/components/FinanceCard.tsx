@@ -5,15 +5,13 @@ import type { CompanyData } from "@/data/mockFinancials";
 
 interface FinanceCardProps {
   company: CompanyData;
-  index: number;
-  totalCount: number;
   onReadReport?: () => void;
   onSwipeLeft?: () => void;
   onBookmark?: () => void;
   isBookmarked?: boolean;
 }
 
-const FinanceCard = ({ company, index, totalCount, onReadReport, onSwipeLeft, onBookmark, isBookmarked = false }: FinanceCardProps) => {
+const FinanceCard = ({ company, onReadReport, onSwipeLeft, onBookmark, isBookmarked = false }: FinanceCardProps) => {
   const isPositive = company.changePercent >= 0;
   const [showBookmarkAnim, setShowBookmarkAnim] = useState(false);
   const x = useMotionValue(0);
