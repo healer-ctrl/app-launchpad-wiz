@@ -1,3 +1,5 @@
+export type CompanyCategory = "india" | "us" | "tech" | "banking";
+
 export interface CompanyData {
   id: string;
   name: string;
@@ -10,6 +12,7 @@ export interface CompanyData {
   quarter: string;
   changePercent: number;
   accentColor: string;
+  categories: CompanyCategory[];
 }
 
 export const companies: CompanyData[] = [
