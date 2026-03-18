@@ -223,7 +223,7 @@ const Index = () => {
         {deepDiveCompany && (
           <CompanyDeepDive
             company={deepDiveCompany}
-            onBack={() => setDeepDiveCompany(null)}
+            onBack={closeDeepDive}
           />
         )}
       </AnimatePresence>
