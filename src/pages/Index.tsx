@@ -198,7 +198,7 @@ const Index = () => {
 
       {/* Search tab */}
       {activeTab === "search" && (
-        <SearchTab onSelectCompany={setDetailCompany} />
+        <SearchTab onSelectCompany={openDetail} />
       )}
 
       {/* Bottom nav */}
