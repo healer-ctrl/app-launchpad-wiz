@@ -191,7 +191,7 @@ const Index = () => {
       {activeTab === "bookmarks" && (
         <BookmarksTab
           bookmarkedCompanies={bookmarkedCompanies}
-          onSelectCompany={setDetailCompany}
+          onSelectCompany={openDetail}
           onRemoveBookmark={(id) => toggleBookmark(id)}
         />
       )}
