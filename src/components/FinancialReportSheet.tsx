@@ -16,16 +16,16 @@ const FinancialReportSheet = ({ company, onClose }: FinancialReportSheetProps) =
   const backdropOpacity = useTransform(dragY, [0, 400], [1, 0]);
   const [isAtTop, setIsAtTop] = useState(true);
 
-  const data = deepDiveData[company.id];
-  if (!data) return null;
-
-  const { financialReport } = data;
-
   const handleScroll = useCallback(() => {
     if (scrollRef.current) {
       setIsAtTop(scrollRef.current.scrollTop <= 0);
     }
   }, []);
+
+  const data = deepDiveData[company.id];
+  if (!data) return null;
+
+  const { financialReport } = data;
 
   const handleDragEnd = (_: any, info: PanInfo) => {
     const sheetHeight = sheetRef.current?.offsetHeight || 600;
