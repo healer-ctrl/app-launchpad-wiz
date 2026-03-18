@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback } from "react";
+import { useRef, useState, useCallback, useEffect } from "react";
 import { motion, useMotionValue, useTransform, PanInfo } from "framer-motion";
 import { X } from "lucide-react";
 import type { CompanyData } from "@/data/mockFinancials";
@@ -14,11 +14,24 @@ const FinancialReportSheet = ({ company, onClose }: FinancialReportSheetProps) =
   const scrollRef = useRef<HTMLDivElement>(null);
   const dragY = useMotionValue(0);
   const backdropOpacity = useTransform(dragY, [0, 400], [1, 0]);
-  const [isAtTop, setIsAtTop] = useState(true);
+  const isAtTopRef = useRef(true);
+  const [isDraggable, setIsDraggable] = useState(true);
 
   const handleScroll = useCallback(() => {
     if (scrollRef.current) {
-      setIsAtTop(scrollRef.current.scrollTop <= 0);
+      const atTop = scrollRef.current.scrollTop <= 0;
+      isAtTopRef.current = atTop;
+      // Only update state when transitioning to prevent re-renders
+      setIsDraggable(atTop);
+    }
+  }, []);
+
+  // On pointer down in scroll area, immediately check scroll position
+  const handlePointerDownOnScroll = useCallback(() => {
+    if (scrollRef.current) {
+      const atTop = scrollRef.current.scrollTop <= 0;
+      isAtTopRef.current = atTop;
+      setIsDraggable(atTop);
     }
   }, []);
 
@@ -50,7 +63,7 @@ const FinancialReportSheet = ({ company, onClose }: FinancialReportSheetProps) =
       {/* Sheet wrapper — only draggable when at scroll top */}
       <motion.div
         ref={sheetRef}
-        drag={isAtTop ? "y" : false}
+        drag={isDraggable ? "y" : false}
         dragConstraints={{ top: 0, bottom: 0 }}
         dragElastic={{ top: 0, bottom: 0.6 }}
         onDragEnd={handleDragEnd}
@@ -59,7 +72,7 @@ const FinancialReportSheet = ({ company, onClose }: FinancialReportSheetProps) =
         animate={{ y: 0 }}
         exit={{ y: "100%" }}
         transition={{ type: "spring", damping: 30, stiffness: 300 }}
-        className="fixed inset-x-0 bottom-0 z-[80] bg-card rounded-t-3xl border-t border-border max-h-[85vh] flex flex-col"
+        className="fixed inset-x-0 bottom-0 z-[80] bg-card rounded-t-3xl border-t border-border max-h-[85vh] flex flex-col touch-none"
       >
         {/* Handle — always draggable, tappable to dismiss */}
         <div
@@ -88,7 +101,9 @@ const FinancialReportSheet = ({ company, onClose }: FinancialReportSheetProps) =
         <div
           ref={scrollRef}
           onScroll={handleScroll}
-          className="flex-1 overflow-y-auto overscroll-contain px-5 pb-10"
+          onPointerDown={handlePointerDownOnScroll}
+          onTouchStart={handlePointerDownOnScroll}
+          className="flex-1 overflow-y-auto overscroll-contain px-5 pb-10 touch-pan-y"
           style={{ WebkitOverflowScrolling: "touch" }}
         >
           <div className="flex flex-col gap-6 mt-2">
