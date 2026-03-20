@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useMemo, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { companies, type CompanyData, type CompanyCategory } from "@/data/mockFinancials";
+import { type CompanyData, type CompanyCategory } from "@/data/mockFinancials";
+import { useFeedData, type FeedCompany } from "@/hooks/useFeedData";
 import FinanceCard from "@/components/FinanceCard";
 import FinancialReportSheet from "@/components/FinancialReportSheet";
 import CompanyDeepDive from "@/components/CompanyDeepDive";
@@ -28,7 +29,9 @@ const Index = () => {
   const [detailCompany, setDetailCompany] = useState<CompanyData | null>(null);
   const [bookmarkedIds, setBookmarkedIds] = useState<Set<string>>(new Set());
 
-  // Push/pop history state for deep dive & detail overlays so back button closes them
+  // Fetch real data from Supabase (falls back to mock)
+  const { data: companies = [], isLoading } = useFeedData();
+
   const openDeepDive = useCallback((company: CompanyData) => {
     window.history.pushState({ overlay: "deepDive" }, "");
     setDeepDiveCompany(company);
@@ -37,7 +40,6 @@ const Index = () => {
   const closeDeepDive = useCallback(() => {
     setDeepDiveCompany((prev) => {
       if (prev) {
-        // Only go back if we actually pushed state for this overlay
         if (window.history.state?.overlay === "deepDive") {
           window.history.back();
         }
@@ -64,7 +66,6 @@ const Index = () => {
 
   useEffect(() => {
     const handlePopState = () => {
-      // When back is pressed, close whichever overlay is open
       if (deepDiveCompany) {
         setDeepDiveCompany(null);
       } else if (detailCompany) {
@@ -74,16 +75,17 @@ const Index = () => {
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
   }, [deepDiveCompany, detailCompany]);
+
   const containerRef = useRef<HTMLDivElement>(null);
 
   const filteredCompanies = useMemo(() => {
     if (activeFilter === "all") return companies;
     return companies.filter((c) => c.categories.includes(activeFilter));
-  }, [activeFilter]);
+  }, [activeFilter, companies]);
 
   const bookmarkedCompanies = useMemo(
     () => companies.filter((c) => bookmarkedIds.has(c.id)),
-    [bookmarkedIds]
+    [bookmarkedIds, companies]
   );
 
   const handleScroll = useCallback(() => {
@@ -128,7 +130,6 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Filter pills — only on feed tab */}
         {activeTab === "feed" && (
           <div className="flex gap-2 px-5 pb-3 overflow-x-auto no-scrollbar">
             {filters.map((f) => (
@@ -151,22 +152,28 @@ const Index = () => {
       {/* Feed tab */}
       {activeTab === "feed" && (
         <>
-          <div
-            ref={containerRef}
-            onScroll={handleScroll}
-            className="snap-container h-screen overflow-y-scroll snap-y snap-mandatory"
-          >
-            {filteredCompanies.map((company) => (
-              <FinanceCard
-                key={company.id}
-                company={company}
-                onReadReport={() => setReportCompany(company)}
-                onSwipeLeft={() => openDeepDive(company)}
-                onBookmark={() => toggleBookmark(company.id)}
-                isBookmarked={bookmarkedIds.has(company.id)}
-              />
-            ))}
-          </div>
+          {isLoading ? (
+            <div className="h-screen flex items-center justify-center">
+              <span className="text-muted-foreground text-sm">Loading...</span>
+            </div>
+          ) : (
+            <div
+              ref={containerRef}
+              onScroll={handleScroll}
+              className="snap-container h-screen overflow-y-scroll snap-y snap-mandatory"
+            >
+              {filteredCompanies.map((company) => (
+                <FinanceCard
+                  key={company.id}
+                  company={company}
+                  onReadReport={() => setReportCompany(company)}
+                  onSwipeLeft={() => openDeepDive(company)}
+                  onBookmark={() => toggleBookmark(company.id)}
+                  isBookmarked={bookmarkedIds.has(company.id)}
+                />
+              ))}
+            </div>
+          )}
 
           {/* Side progress bar */}
           <div className="fixed right-2 top-1/2 -translate-y-1/2 z-40 flex flex-col gap-1">
@@ -187,7 +194,6 @@ const Index = () => {
         </>
       )}
 
-      {/* Bookmarks tab */}
       {activeTab === "bookmarks" && (
         <BookmarksTab
           bookmarkedCompanies={bookmarkedCompanies}
@@ -196,19 +202,16 @@ const Index = () => {
         />
       )}
 
-      {/* Search tab */}
       {activeTab === "search" && (
         <SearchTab onSelectCompany={openDetail} />
       )}
 
-      {/* Bottom nav */}
       <BottomNav
         activeTab={activeTab}
         onTabChange={setActiveTab}
         bookmarkCount={bookmarkedIds.size}
       />
 
-      {/* Financial Report Sheet */}
       <AnimatePresence>
         {reportCompany && (
           <FinancialReportSheet
@@ -218,7 +221,6 @@ const Index = () => {
         )}
       </AnimatePresence>
 
-      {/* Company Deep Dive */}
       <AnimatePresence>
         {deepDiveCompany && (
           <CompanyDeepDive
@@ -228,7 +230,6 @@ const Index = () => {
         )}
       </AnimatePresence>
 
-      {/* Company Detail Page (from search/bookmarks) */}
       <AnimatePresence>
         {detailCompany && (
           <CompanyDetailPage
