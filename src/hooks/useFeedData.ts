@@ -58,9 +58,9 @@ function mapDbToCompany(item: any): FeedCompany {
   };
 }
 
-export function useFeedData() {
+export function useFeedData(useMockData = false) {
   return useQuery({
-    queryKey: ["feed"],
+    queryKey: ["feed", useMockData],
     queryFn: async (): Promise<FeedCompany[]> => {
       const { data, error } = await supabase
         .from("report_summaries")
