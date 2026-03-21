@@ -60,9 +60,11 @@ export type Database = {
           pe_ratio: string | null
           processed_at: string | null
           profit: string | null
+          quarter: string | null
           report_id: string
           revenue: string | null
           roe: string | null
+          sector: string | null
           summary: string | null
         }
         Insert: {
@@ -80,9 +82,11 @@ export type Database = {
           pe_ratio?: string | null
           processed_at?: string | null
           profit?: string | null
+          quarter?: string | null
           report_id: string
           revenue?: string | null
           roe?: string | null
+          sector?: string | null
           summary?: string | null
         }
         Update: {
@@ -100,9 +104,11 @@ export type Database = {
           pe_ratio?: string | null
           processed_at?: string | null
           profit?: string | null
+          quarter?: string | null
           report_id?: string
           revenue?: string | null
           roe?: string | null
+          sector?: string | null
           summary?: string | null
         }
         Relationships: [
@@ -131,6 +137,7 @@ export type Database = {
           raw_pdf_path: string | null
           report_url: string | null
           status: string
+          uid: string | null
         }
         Insert: {
           company_id: string
@@ -140,6 +147,7 @@ export type Database = {
           raw_pdf_path?: string | null
           report_url?: string | null
           status?: string
+          uid?: string | null
         }
         Update: {
           company_id?: string
@@ -149,6 +157,7 @@ export type Database = {
           raw_pdf_path?: string | null
           report_url?: string | null
           status?: string
+          uid?: string | null
         }
         Relationships: [
           {
@@ -159,6 +168,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      seen_announcements: {
+        Row: {
+          created_at: string
+          id: string
+          symbol: string | null
+          uid: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          symbol?: string | null
+          uid: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          symbol?: string | null
+          uid?: string
+        }
+        Relationships: []
       }
     }
     Views: {
