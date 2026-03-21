@@ -201,6 +201,11 @@ Deno.serve(async (req) => {
       }
     }
 
+    // ── Update nse_last_polled timestamp ──
+    await supabase
+      .from("app_config")
+      .upsert({ key: "nse_last_polled", value: new Date().toISOString(), updated_at: new Date().toISOString() });
+
     return new Response(
       JSON.stringify({
         success: true,
