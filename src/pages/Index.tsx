@@ -1,7 +1,9 @@
 import { useState, useRef, useCallback, useMemo, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { Settings as SettingsIcon } from "lucide-react";
 import { type CompanyData, type CompanyCategory } from "@/data/mockFinancials";
 import { useFeedData, type FeedCompany } from "@/hooks/useFeedData";
+import { useSettings } from "@/hooks/useSettings";
 import FinanceCard from "@/components/FinanceCard";
 import FinancialReportSheet from "@/components/FinancialReportSheet";
 import CompanyDeepDive from "@/components/CompanyDeepDive";
@@ -9,6 +11,7 @@ import CompanyDetailPage from "@/components/CompanyDetailPage";
 import BottomNav, { type TabType } from "@/components/BottomNav";
 import SearchTab from "@/components/SearchTab";
 import BookmarksTab from "@/components/BookmarksTab";
+import Settings from "@/pages/Settings";
 
 type FilterType = "all" | CompanyCategory;
 
@@ -22,6 +25,7 @@ const filters: { label: string; value: FilterType }[] = [
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState<TabType>("feed");
+  const [showSettings, setShowSettings] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const [activeFilter, setActiveFilter] = useState<FilterType>("all");
   const [reportCompany, setReportCompany] = useState<CompanyData | null>(null);
@@ -29,8 +33,10 @@ const Index = () => {
   const [detailCompany, setDetailCompany] = useState<CompanyData | null>(null);
   const [bookmarkedIds, setBookmarkedIds] = useState<Set<string>>(new Set());
 
+  const { useMockData } = useSettings();
+
   // Fetch real data from Supabase (falls back to mock)
-  const { data: companies = [], isLoading } = useFeedData();
+  const { data: companies = [], isLoading } = useFeedData(useMockData);
 
   const openDeepDive = useCallback((company: CompanyData) => {
     window.history.pushState({ overlay: "deepDive" }, "");
@@ -124,9 +130,14 @@ const Index = () => {
           <h1 className="text-lg font-bold font-['Space_Grotesk'] text-foreground tracking-tight">
             Fin<span className="text-primary">Pulse</span>
           </h1>
-          <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-            <span className="text-xs text-muted-foreground font-medium">Live</span>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+              <span className="text-xs text-muted-foreground font-medium">Live</span>
+            </div>
+            <button onClick={() => setShowSettings(true)} className="text-muted-foreground hover:text-foreground transition-colors">
+              <SettingsIcon className="w-4.5 h-4.5" />
+            </button>
           </div>
         </div>
 
@@ -237,6 +248,10 @@ const Index = () => {
             onBack={closeDetail}
           />
         )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showSettings && <Settings onBack={() => setShowSettings(false)} />}
       </AnimatePresence>
     </div>
   );
