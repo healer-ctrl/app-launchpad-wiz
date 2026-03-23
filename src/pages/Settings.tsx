@@ -2,6 +2,7 @@ import { ArrowLeft } from "lucide-react";
 import { motion } from "framer-motion";
 import { Switch } from "@/components/ui/switch";
 import { useSettings } from "@/hooks/useSettings";
+import { useNseStatus } from "@/hooks/useNseStatus";
 
 interface SettingsProps {
   onBack: () => void;
