@@ -2,6 +2,7 @@ import { useRef, useState, useCallback, useEffect } from "react";
 import { motion, useMotionValue, useTransform, PanInfo } from "framer-motion";
 import { X } from "lucide-react";
 import type { CompanyData } from "@/data/mockFinancials";
+import type { FeedCompany } from "@/hooks/useFeedData";
 import { deepDiveData } from "@/data/companyDeepDive";
 
 interface FinancialReportSheetProps {
@@ -35,10 +36,22 @@ const FinancialReportSheet = ({ company, onClose }: FinancialReportSheetProps) =
     }
   }, []);
 
+  const feedCompany = company as FeedCompany;
   const data = deepDiveData[company.id];
-  if (!data) return null;
 
-  const { financialReport } = data;
+  // Use real full_report_text if available, else fall back to mock
+  const reportText = feedCompany.fullReportText || data?.financialReport?.reportText || "No report available.";
+  const balanceSheet = data?.financialReport?.balanceSheet || [];
+  const keyRatios = feedCompany.fullReportText
+    ? [
+        { label: "EPS", value: feedCompany.eps || "—" },
+        { label: "P/E Ratio", value: feedCompany.peRatio || "—" },
+        { label: "Debt/Equity", value: feedCompany.debtEquity || "—" },
+        { label: "EBITDA", value: feedCompany.ebitda || "—" },
+        { label: "Current Ratio", value: feedCompany.currentRatio || "—" },
+        { label: "ROE", value: feedCompany.roe || "—" },
+      ]
+    : data?.financialReport?.keyRatios || [];
 
   const handleDragEnd = (_: any, info: PanInfo) => {
     const sheetHeight = sheetRef.current?.offsetHeight || 600;
@@ -116,7 +129,7 @@ const FinancialReportSheet = ({ company, onClose }: FinancialReportSheetProps) =
               <h4 className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2 font-medium">
                 Quarterly Summary
               </h4>
-              <p className="text-sm leading-relaxed text-foreground/90">{financialReport.reportText}</p>
+              <p className="text-sm leading-relaxed text-foreground/90 whitespace-pre-line">{reportText}</p>
             </motion.div>
 
             {/* Balance sheet */}
@@ -129,7 +142,7 @@ const FinancialReportSheet = ({ company, onClose }: FinancialReportSheetProps) =
                 Balance Sheet Highlights
               </h4>
               <div className="flex flex-col gap-2">
-                {financialReport.balanceSheet.map((item) => (
+                {balanceSheet.map((item) => (
                   <div
                     key={item.label}
                     className="flex items-center justify-between py-2.5 px-3 rounded-xl bg-secondary/40 border border-border/50"
@@ -151,7 +164,7 @@ const FinancialReportSheet = ({ company, onClose }: FinancialReportSheetProps) =
                 Key Ratios
               </h4>
               <div className="grid grid-cols-2 gap-2.5">
-                {financialReport.keyRatios.map((ratio) => (
+                {keyRatios.map((ratio) => (
                   <div
                     key={ratio.label}
                     className="rounded-xl bg-secondary/60 border border-border p-3 text-center"

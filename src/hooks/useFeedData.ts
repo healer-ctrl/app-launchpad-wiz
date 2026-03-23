@@ -14,19 +14,18 @@ export interface FeedCompany extends CompanyData {
   ebitda?: string;
   currentRatio?: string;
   roe?: string;
+  sector?: string;
 }
 
-// Map DB row to CompanyData shape used by all existing components
 function mapDbToCompany(item: any): FeedCompany {
   const company = item.companies;
   const growthStr = item.growth || "+0%";
   const growthNum = parseFloat(growthStr.replace(/[^-\d.]/g, "")) || 0;
 
-  // Derive categories from sector/exchange
   const categories: CompanyCategory[] = [];
   if (company.exchange === "NSE" || company.exchange === "BSE") categories.push("india");
   if (company.exchange === "NASDAQ" || company.exchange === "NYSE") categories.push("us");
-  const sectorLower = (company.sector || "").toLowerCase();
+  const sectorLower = (company.sector || item.sector || "").toLowerCase();
   if (sectorLower.includes("tech") || sectorLower.includes("software") || sectorLower.includes("semiconductor") || sectorLower.includes("it ")) categories.push("tech");
   if (sectorLower.includes("bank") || sectorLower.includes("financial")) categories.push("banking");
 
@@ -39,12 +38,11 @@ function mapDbToCompany(item: any): FeedCompany {
     revenue: item.revenue || "",
     profit: item.profit || "",
     growth: item.growth || "",
-    quarter: "", // Will be populated from report if available
+    quarter: item.quarter || "",
     changePercent: growthNum,
     accentColor: "174 100% 50%",
     categories,
     domain: company.domain || "",
-    // Extended fields
     reportSummaryId: item.id,
     reportId: item.report_id,
     fullReportText: item.full_report_text,
@@ -55,6 +53,7 @@ function mapDbToCompany(item: any): FeedCompany {
     ebitda: item.ebitda,
     currentRatio: item.current_ratio,
     roe: item.roe,
+    sector: item.sector || company.sector,
   };
 }
 
@@ -76,7 +75,8 @@ export function useFeedData(useMockData = false) {
             domain
           )
         `)
-        .order("processed_at", { ascending: false });
+        .order("processed_at", { ascending: false })
+        .limit(20);
 
       if (error) {
         console.error("Feed query error:", error);
@@ -84,8 +84,7 @@ export function useFeedData(useMockData = false) {
       }
 
       if (!data || data.length === 0) {
-        // Fallback to mock data when no real data exists
-        return mockCompanies as FeedCompany[];
+        return [];
       }
 
       // Deduplicate: latest summary per company
@@ -98,6 +97,6 @@ export function useFeedData(useMockData = false) {
 
       return feed.map(mapDbToCompany);
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
   });
 }

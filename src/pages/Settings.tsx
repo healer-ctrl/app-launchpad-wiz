@@ -2,6 +2,7 @@ import { ArrowLeft } from "lucide-react";
 import { motion } from "framer-motion";
 import { Switch } from "@/components/ui/switch";
 import { useSettings } from "@/hooks/useSettings";
+import { useNseStatus } from "@/hooks/useNseStatus";
 
 interface SettingsProps {
   onBack: () => void;
@@ -9,6 +10,7 @@ interface SettingsProps {
 
 const Settings = ({ onBack }: SettingsProps) => {
   const { useMockData, toggleMockData } = useSettings();
+  const { data: nseStatus } = useNseStatus();
 
   return (
     <motion.div
@@ -52,9 +54,17 @@ const Settings = ({ onBack }: SettingsProps) => {
 
             {/* NSE Feed Status */}
             <div className="flex items-center justify-between">
-              <p className="text-sm font-medium text-foreground">NSE Feed Status</p>
-              <span className="text-xs font-medium text-yellow-400 flex items-center gap-1.5">
-                🟡 Not Connected
+              <div>
+                <p className="text-sm font-medium text-foreground">NSE Feed Status</p>
+                {nseStatus?.timeAgo && (
+                  <p className="text-xs text-muted-foreground mt-0.5">Last updated {nseStatus.timeAgo}</p>
+                )}
+              </div>
+              <span className={`text-xs font-medium flex items-center gap-1.5 ${
+                nseStatus?.status === "live" ? "text-green-400" :
+                nseStatus?.status === "delayed" ? "text-yellow-400" : "text-red-400"
+              }`}>
+                {nseStatus?.emoji ?? "🔴"} {nseStatus?.label ?? "Not Connected"}
               </span>
             </div>
           </div>

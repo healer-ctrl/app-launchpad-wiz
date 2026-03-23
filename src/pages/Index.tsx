@@ -5,6 +5,8 @@ import { type CompanyData, type CompanyCategory } from "@/data/mockFinancials";
 import { useFeedData, type FeedCompany } from "@/hooks/useFeedData";
 import { useSettings } from "@/hooks/useSettings";
 import FinanceCard from "@/components/FinanceCard";
+import FeedSkeleton from "@/components/FeedSkeleton";
+import FeedEmptyState from "@/components/FeedEmptyState";
 import FinancialReportSheet from "@/components/FinancialReportSheet";
 import CompanyDeepDive from "@/components/CompanyDeepDive";
 import CompanyDetailPage from "@/components/CompanyDetailPage";
@@ -33,7 +35,7 @@ const Index = () => {
   const [detailCompany, setDetailCompany] = useState<CompanyData | null>(null);
   const [bookmarkedIds, setBookmarkedIds] = useState<Set<string>>(new Set());
 
-  const { useMockData } = useSettings();
+  const { useMockData, toggleMockData } = useSettings();
 
   // Fetch real data from Supabase (falls back to mock)
   const { data: companies = [], isLoading } = useFeedData(useMockData);
@@ -164,9 +166,9 @@ const Index = () => {
       {activeTab === "feed" && (
         <>
           {isLoading ? (
-            <div className="h-screen flex items-center justify-center">
-              <span className="text-muted-foreground text-sm">Loading...</span>
-            </div>
+            <FeedSkeleton />
+          ) : filteredCompanies.length === 0 && !useMockData ? (
+            <FeedEmptyState onSwitchToMock={() => toggleMockData(true)} />
           ) : (
             <div
               ref={containerRef}
