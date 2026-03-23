@@ -36,10 +36,22 @@ const FinancialReportSheet = ({ company, onClose }: FinancialReportSheetProps) =
     }
   }, []);
 
+  const feedCompany = company as FeedCompany;
   const data = deepDiveData[company.id];
-  if (!data) return null;
 
-  const { financialReport } = data;
+  // Use real full_report_text if available, else fall back to mock
+  const reportText = feedCompany.fullReportText || data?.financialReport?.reportText || "No report available.";
+  const balanceSheet = data?.financialReport?.balanceSheet || [];
+  const keyRatios = feedCompany.fullReportText
+    ? [
+        { label: "EPS", value: feedCompany.eps || "—" },
+        { label: "P/E Ratio", value: feedCompany.peRatio || "—" },
+        { label: "Debt/Equity", value: feedCompany.debtEquity || "—" },
+        { label: "EBITDA", value: feedCompany.ebitda || "—" },
+        { label: "Current Ratio", value: feedCompany.currentRatio || "—" },
+        { label: "ROE", value: feedCompany.roe || "—" },
+      ]
+    : data?.financialReport?.keyRatios || [];
 
   const handleDragEnd = (_: any, info: PanInfo) => {
     const sheetHeight = sheetRef.current?.offsetHeight || 600;
