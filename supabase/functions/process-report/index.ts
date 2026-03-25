@@ -60,8 +60,15 @@ Deno.serve(async (req) => {
         if (!pdfResponse.ok) {
           throw new Error(`PDF download failed: ${pdfResponse.status}`);
         }
-        const pdfBuffer = await pdfResponse.arrayBuffer();
-        pdfBase64 = btoa(String.fromCharCode(...new Uint8Array(pdfBuffer)));
+        const pdfBuffer = new Uint8Array(await pdfResponse.arrayBuffer());
+        // Encode in chunks to avoid stack overflow on large PDFs
+        let binary = "";
+        const chunkSize = 8192;
+        for (let i = 0; i < pdfBuffer.length; i += chunkSize) {
+          const chunk = pdfBuffer.subarray(i, i + chunkSize);
+          binary += String.fromCharCode(...chunk);
+        }
+        pdfBase64 = btoa(binary);
         console.log(`PDF downloaded: ${pdfBase64.length} chars base64`);
       } catch (e) {
         console.error("PDF download error:", e);
