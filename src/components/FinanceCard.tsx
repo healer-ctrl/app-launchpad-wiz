@@ -107,7 +107,7 @@ const FinanceCard = ({ company, onReadReport, onSwipeLeft, onBookmark, isBookmar
 
         {/* Company header */}
         <div className="flex items-center gap-4">
-          <CompanyLogo domain={company.domain} name={company.name} size="md" />
+          <CompanyLogo domain={company.domain} name={company.name} ticker={company.ticker} size="md" />
           <div className="flex-1 min-w-0">
             <h2 className="text-xl font-bold font-['Space_Grotesk'] text-foreground truncate">
               {company.name}
