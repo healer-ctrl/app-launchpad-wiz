@@ -85,7 +85,7 @@ const CompanyDeepDive = ({ company, onBack }: CompanyDeepDiveProps) => {
         <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
           <SectionTitle icon={Building2} title="Company Overview" />
           <div className="flex items-center gap-4 mb-4">
-            <CompanyLogo domain={company.domain} name={company.name} size="lg" />
+            <CompanyLogo domain={company.domain} name={company.name} ticker={company.ticker} size="lg" />
             <div className="flex-1 min-w-0">
               <h2 className="text-xl font-bold font-['Space_Grotesk'] text-foreground">{company.name}</h2>
               <p className="text-xs text-muted-foreground">{overview.sector} · {overview.industry}</p>
