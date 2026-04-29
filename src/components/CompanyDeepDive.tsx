@@ -1,9 +1,10 @@
-import { useState } from "react";
 import { motion, useMotionValue, useTransform } from "framer-motion";
-import { ArrowLeft, Building2, TrendingUp, TrendingDown, BarChart3, Grid3X3, Newspaper, BookOpen } from "lucide-react";
+import { ArrowLeft, Building2, TrendingUp, TrendingDown, BarChart3, Grid3X3, Newspaper, BookOpen, Loader2 } from "lucide-react";
 import type { CompanyData } from "@/data/mockFinancials";
 import { deepDiveData } from "@/data/companyDeepDive";
 import CompanyLogo from "@/components/CompanyLogo";
+import { useSettings } from "@/hooks/useSettings";
+import { useLiveDeepDive } from "@/hooks/useLiveDeepDive";
 
 interface CompanyDeepDiveProps {
   company: CompanyData;
@@ -18,28 +19,101 @@ const SectionTitle = ({ icon: Icon, title }: { icon: React.ElementType; title: s
 );
 
 const CompanyDeepDive = ({ company, onBack }: CompanyDeepDiveProps) => {
-  const data = deepDiveData[company.id];
+  const { useMockData } = useSettings();
   const isPositive = company.changePercent >= 0;
   const dragX = useMotionValue(0);
   const pageOpacity = useTransform(dragX, [0, 150], [1, 0.7]);
 
-  if (!data) return null;
+  // Live data hook (only enabled when not in mock mode)
+  const { data: live, isLoading: liveLoading } = useLiveDeepDive(company.id, !useMockData);
+  const mockData = deepDiveData[company.id];
 
-  const { overview, stockInfo, quarterlyTimeline, keyMetrics, news, history } = data;
+  // ---- Build a unified view model ----
+  let overview: { sector: string; industry: string; description: string; founded: string; headquarters: string; ceo: string; employees: string } | null = null;
+  let stockInfo: { label: string; value: string }[] = [];
+  let quarterlyTimeline: { quarter: string; revenue: number; netProfit: number; eps: number }[] = [];
+  let metricsGrid: { label: string; value: string }[] = [];
+  let news: { date: string; headline: string; summary: string }[] = [];
+  let history: { foundingStory: string; milestones: string[]; keyProducts: string[]; competitors: string[] } | null = null;
 
-  // Find max revenue for chart scaling
-  const maxRevenue = Math.max(...quarterlyTimeline.map((q) => q.revenue));
-  const maxProfit = Math.max(...quarterlyTimeline.map((q) => q.netProfit));
+  if (useMockData && mockData) {
+    overview = {
+      sector: mockData.overview.sector,
+      industry: mockData.overview.industry,
+      description: mockData.overview.description,
+      founded: mockData.overview.founded,
+      headquarters: mockData.overview.headquarters,
+      ceo: mockData.overview.ceo,
+      employees: mockData.overview.employees,
+    };
+    stockInfo = [
+      { label: "Current Price", value: mockData.stockInfo.currentPrice },
+      { label: "Market Cap", value: mockData.stockInfo.marketCap },
+      { label: "52W High", value: mockData.stockInfo.high52w },
+      { label: "52W Low", value: mockData.stockInfo.low52w },
+      { label: "P/E Ratio", value: mockData.stockInfo.peRatio },
+      { label: "Div. Yield", value: mockData.stockInfo.dividendYield },
+    ];
+    quarterlyTimeline = mockData.quarterlyTimeline;
+    metricsGrid = [
+      { label: "Revenue", value: mockData.keyMetrics.revenue },
+      { label: "Gross Margin", value: mockData.keyMetrics.grossMargin },
+      { label: "Net Margin", value: mockData.keyMetrics.netMargin },
+      { label: "ROE", value: mockData.keyMetrics.roe },
+      { label: "ROCE", value: mockData.keyMetrics.roce },
+      { label: "Debt/Equity", value: mockData.keyMetrics.debtToEquity },
+      { label: "Free Cash Flow", value: mockData.keyMetrics.freeCashFlow },
+    ];
+    news = mockData.news;
+    history = mockData.history;
+  } else if (!useMockData && live) {
+    const p = live.profile;
+    const ls = live.latestSummary;
+    overview = {
+      sector: ls?.sector || "—",
+      industry: p?.industry || "—",
+      description: p?.description || "Profile is being generated…",
+      founded: p?.founded || "—",
+      headquarters: p?.headquarters || "—",
+      ceo: p?.ceo || "—",
+      employees: p?.employees || "—",
+    };
+    stockInfo = [
+      { label: "Latest Quarter", value: ls?.quarter || "—" },
+      { label: "Revenue", value: ls?.revenue || "—" },
+      { label: "Net Profit", value: ls?.profit || "—" },
+      { label: "Growth (YoY)", value: ls?.growth || "—" },
+      { label: "P/E Ratio", value: ls?.pe_ratio || "—" },
+      { label: "Beat/Miss", value: ls?.beat_or_miss || "—" },
+    ];
+    quarterlyTimeline = live.timeline;
+    metricsGrid = [
+      { label: "Revenue", value: ls?.revenue || "—" },
+      { label: "Net Profit", value: ls?.profit || "—" },
+      { label: "EPS", value: ls?.eps || "—" },
+      { label: "ROE", value: ls?.roe || "—" },
+      { label: "EBITDA", value: ls?.ebitda || "—" },
+      { label: "Debt/Equity", value: ls?.debt_equity || "—" },
+      { label: "Current Ratio", value: ls?.current_ratio || "—" },
+    ];
+    news = ls?.headline
+      ? [{ date: ls?.quarter || "Latest", headline: ls.headline, summary: ls.summary || "" }]
+      : [];
+    history = p
+      ? {
+          foundingStory: p.founding_story || "",
+          milestones: p.milestones || [],
+          keyProducts: p.key_products || [],
+          competitors: p.competitors || [],
+        }
+      : null;
+  }
 
-  const metricsGrid = [
-    { label: "Revenue", value: keyMetrics.revenue },
-    { label: "Gross Margin", value: keyMetrics.grossMargin },
-    { label: "Net Margin", value: keyMetrics.netMargin },
-    { label: "ROE", value: keyMetrics.roe },
-    { label: "ROCE", value: keyMetrics.roce },
-    { label: "Debt/Equity", value: keyMetrics.debtToEquity },
-    { label: "Free Cash Flow", value: keyMetrics.freeCashFlow },
-  ];
+  const showLoading = !useMockData && liveLoading && !live;
+  const noData = !overview && !showLoading;
+
+  const maxRevenue = Math.max(1, ...quarterlyTimeline.map((q) => q.revenue));
+  const maxProfit = Math.max(1, ...quarterlyTimeline.map((q) => q.netProfit));
 
   return (
     <motion.div
@@ -48,9 +122,7 @@ const CompanyDeepDive = ({ company, onBack }: CompanyDeepDiveProps) => {
       dragElastic={{ left: 0, right: 0.6 }}
       style={{ x: dragX, opacity: pageOpacity }}
       onDragEnd={(_, info) => {
-        if (info.offset.x > 100 || info.velocity.x > 400) {
-          onBack();
-        }
+        if (info.offset.x > 100 || info.velocity.x > 400) onBack();
       }}
       initial={{ x: "100%" }}
       animate={{ x: 0 }}
@@ -80,178 +152,196 @@ const CompanyDeepDive = ({ company, onBack }: CompanyDeepDiveProps) => {
       </div>
 
       <div className="max-w-[430px] mx-auto px-5 py-6 flex flex-col gap-8 pb-20">
-
-        {/* SECTION 1 — Company Overview */}
-        <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-          <SectionTitle icon={Building2} title="Company Overview" />
-          <div className="flex items-center gap-4 mb-4">
-            <CompanyLogo domain={company.domain} name={company.name} ticker={company.ticker} size="lg" />
-            <div className="flex-1 min-w-0">
-              <h2 className="text-xl font-bold font-['Space_Grotesk'] text-foreground">{company.name}</h2>
-              <p className="text-xs text-muted-foreground">{overview.sector} · {overview.industry}</p>
-            </div>
+        {showLoading && (
+          <div className="flex flex-col items-center justify-center gap-3 py-20">
+            <Loader2 className="w-6 h-6 text-primary animate-spin" />
+            <p className="text-xs text-muted-foreground">Generating company profile…</p>
           </div>
-          <p className="text-sm leading-relaxed text-muted-foreground mb-4">{overview.description}</p>
-          <div className="grid grid-cols-2 gap-2.5">
-            {[
-              { label: "Founded", value: overview.founded },
-              { label: "HQ", value: overview.headquarters },
-              { label: "CEO", value: overview.ceo },
-              { label: "Employees", value: overview.employees },
-            ].map((item) => (
-              <div key={item.label} className="rounded-xl bg-secondary/40 border border-border/50 p-3">
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-0.5">{item.label}</p>
-                <p className="text-xs font-semibold text-foreground">{item.value}</p>
+        )}
+
+        {noData && (
+          <div className="flex items-center justify-center py-20">
+            <p className="text-sm text-muted-foreground">No deep-dive data available yet.</p>
+          </div>
+        )}
+
+        {overview && (
+          <>
+            {/* SECTION 1 — Company Overview */}
+            <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+              <SectionTitle icon={Building2} title="Company Overview" />
+              <div className="flex items-center gap-4 mb-4">
+                <CompanyLogo domain={company.domain} name={company.name} ticker={company.ticker} size="lg" />
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-xl font-bold font-['Space_Grotesk'] text-foreground">{company.name}</h2>
+                  <p className="text-xs text-muted-foreground">{overview.sector} · {overview.industry}</p>
+                </div>
               </div>
-            ))}
-          </div>
-        </motion.section>
-
-        {/* SECTION 2 — Stock Info */}
-        <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-          <SectionTitle icon={TrendingUp} title="Stock Information" />
-          <div className="grid grid-cols-2 gap-2.5">
-            {[
-              { label: "Current Price", value: stockInfo.currentPrice },
-              { label: "Market Cap", value: stockInfo.marketCap },
-              { label: "52W High", value: stockInfo.high52w },
-              { label: "52W Low", value: stockInfo.low52w },
-              { label: "P/E Ratio", value: stockInfo.peRatio },
-              { label: "Div. Yield", value: stockInfo.dividendYield },
-            ].map((item) => (
-              <div key={item.label} className="rounded-xl bg-secondary/60 border border-border p-3">
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">{item.label}</p>
-                <p className="text-sm font-bold font-['Space_Grotesk'] text-foreground">{item.value}</p>
+              <p className="text-sm leading-relaxed text-muted-foreground mb-4">{overview.description}</p>
+              <div className="grid grid-cols-2 gap-2.5">
+                {[
+                  { label: "Founded", value: overview.founded },
+                  { label: "HQ", value: overview.headquarters },
+                  { label: "CEO", value: overview.ceo },
+                  { label: "Employees", value: overview.employees },
+                ].map((item) => (
+                  <div key={item.label} className="rounded-xl bg-secondary/40 border border-border/50 p-3">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-0.5">{item.label}</p>
+                    <p className="text-xs font-semibold text-foreground">{item.value}</p>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        </motion.section>
+            </motion.section>
 
-        {/* SECTION 3 — Financials Timeline */}
-        <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
-          <SectionTitle icon={BarChart3} title="Financials Timeline" />
-          
-          {/* Revenue bars */}
-          <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">Revenue</p>
-          <div className="flex items-end gap-2 h-28 mb-5">
-            {quarterlyTimeline.map((q, i) => (
-              <div key={q.quarter} className="flex-1 flex flex-col items-center gap-1">
-                <span className="text-[10px] font-bold font-['Space_Grotesk'] text-foreground">
-                  {typeof q.revenue === "number" && q.revenue > 1000
-                    ? `${(q.revenue / 1000).toFixed(0)}K`
-                    : q.revenue.toFixed(1)}
-                </span>
-                <motion.div
-                  initial={{ height: 0 }}
-                  animate={{ height: `${(q.revenue / maxRevenue) * 80}%` }}
-                  transition={{ delay: 0.4 + i * 0.1, duration: 0.5 }}
-                  className="w-full rounded-t-lg bg-primary/80"
-                />
-                <span className="text-[9px] text-muted-foreground mt-1">{q.quarter.replace("FY", "")}</span>
+            {/* SECTION 2 — Stock / Latest Quarter */}
+            <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+              <SectionTitle icon={TrendingUp} title={useMockData ? "Stock Information" : "Latest Quarter"} />
+              <div className="grid grid-cols-2 gap-2.5">
+                {stockInfo.map((item) => (
+                  <div key={item.label} className="rounded-xl bg-secondary/60 border border-border p-3">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">{item.label}</p>
+                    <p className="text-sm font-bold font-['Space_Grotesk'] text-foreground">{item.value}</p>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+            </motion.section>
 
-          {/* Net Profit bars */}
-          <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">Net Profit</p>
-          <div className="flex items-end gap-2 h-24 mb-4">
-            {quarterlyTimeline.map((q, i) => (
-              <div key={q.quarter} className="flex-1 flex flex-col items-center gap-1">
-                <span className="text-[10px] font-bold font-['Space_Grotesk'] text-foreground">
-                  {typeof q.netProfit === "number" && q.netProfit > 1000
-                    ? `${(q.netProfit / 1000).toFixed(0)}K`
-                    : q.netProfit.toFixed(1)}
-                </span>
-                <motion.div
-                  initial={{ height: 0 }}
-                  animate={{ height: `${(q.netProfit / maxProfit) * 80}%` }}
-                  transition={{ delay: 0.5 + i * 0.1, duration: 0.5 }}
-                  className="w-full rounded-t-lg bg-accent/60"
-                />
-                <span className="text-[9px] text-muted-foreground mt-1">{q.quarter.replace("FY", "")}</span>
+            {/* SECTION 3 — Financials Timeline */}
+            {quarterlyTimeline.length > 0 && (
+              <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+                <SectionTitle icon={BarChart3} title="Financials Timeline" />
+
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">Revenue</p>
+                <div className="flex items-end gap-2 h-28 mb-5">
+                  {quarterlyTimeline.map((q, i) => (
+                    <div key={`${q.quarter}-r-${i}`} className="flex-1 flex flex-col items-center gap-1">
+                      <span className="text-[10px] font-bold font-['Space_Grotesk'] text-foreground">
+                        {q.revenue > 1000 ? `${(q.revenue / 1000).toFixed(0)}K` : q.revenue.toFixed(1)}
+                      </span>
+                      <motion.div
+                        initial={{ height: 0 }}
+                        animate={{ height: `${(q.revenue / maxRevenue) * 80}%` }}
+                        transition={{ delay: 0.4 + i * 0.1, duration: 0.5 }}
+                        className="w-full rounded-t-lg bg-primary/80"
+                      />
+                      <span className="text-[9px] text-muted-foreground mt-1">{q.quarter.replace("FY", "")}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">Net Profit</p>
+                <div className="flex items-end gap-2 h-24 mb-4">
+                  {quarterlyTimeline.map((q, i) => (
+                    <div key={`${q.quarter}-p-${i}`} className="flex-1 flex flex-col items-center gap-1">
+                      <span className="text-[10px] font-bold font-['Space_Grotesk'] text-foreground">
+                        {q.netProfit > 1000 ? `${(q.netProfit / 1000).toFixed(0)}K` : q.netProfit.toFixed(1)}
+                      </span>
+                      <motion.div
+                        initial={{ height: 0 }}
+                        animate={{ height: `${(q.netProfit / maxProfit) * 80}%` }}
+                        transition={{ delay: 0.5 + i * 0.1, duration: 0.5 }}
+                        className="w-full rounded-t-lg bg-accent/60"
+                      />
+                      <span className="text-[9px] text-muted-foreground mt-1">{q.quarter.replace("FY", "")}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">EPS Trend</p>
+                <div className="flex items-center gap-3">
+                  {quarterlyTimeline.map((q, i) => (
+                    <div key={`${q.quarter}-e-${i}`} className="flex-1 text-center rounded-xl bg-secondary/40 border border-border/50 py-2.5">
+                      <p className="text-xs font-bold font-['Space_Grotesk'] text-primary">{q.eps}</p>
+                      <p className="text-[9px] text-muted-foreground mt-0.5">{q.quarter.replace("FY", "")}</p>
+                    </div>
+                  ))}
+                </div>
+              </motion.section>
+            )}
+
+            {/* SECTION 4 — Key Metrics */}
+            <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
+              <SectionTitle icon={Grid3X3} title="Key Metrics" />
+              <div className="grid grid-cols-2 gap-2.5">
+                {metricsGrid.map((m) => (
+                  <div key={m.label} className="rounded-xl bg-secondary/60 border border-border p-3.5">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">{m.label}</p>
+                    <p className="text-sm font-bold font-['Space_Grotesk'] text-foreground">{m.value}</p>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+            </motion.section>
 
-          {/* EPS line */}
-          <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">EPS Trend</p>
-          <div className="flex items-center gap-3">
-            {quarterlyTimeline.map((q) => (
-              <div key={q.quarter} className="flex-1 text-center rounded-xl bg-secondary/40 border border-border/50 py-2.5">
-                <p className="text-xs font-bold font-['Space_Grotesk'] text-primary">{q.eps}</p>
-                <p className="text-[9px] text-muted-foreground mt-0.5">{q.quarter.replace("FY", "")}</p>
-              </div>
-            ))}
-          </div>
-        </motion.section>
+            {/* SECTION 5 — News */}
+            {news.length > 0 && (
+              <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}>
+                <SectionTitle icon={Newspaper} title={useMockData ? "Company News" : "Latest Headline"} />
+                <div className="flex flex-col gap-3">
+                  {news.map((item, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.55 + i * 0.06 }}
+                      className="p-3.5 rounded-xl bg-secondary/40 border border-border/60"
+                    >
+                      <p className="text-[10px] text-primary font-medium mb-1">{item.date}</p>
+                      <p className="text-sm font-semibold text-foreground font-['Space_Grotesk'] mb-0.5">{item.headline}</p>
+                      <p className="text-xs text-muted-foreground leading-relaxed">{item.summary}</p>
+                    </motion.div>
+                  ))}
+                </div>
+              </motion.section>
+            )}
 
-        {/* SECTION 4 — Key Metrics Grid */}
-        <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
-          <SectionTitle icon={Grid3X3} title="Key Metrics" />
-          <div className="grid grid-cols-2 gap-2.5">
-            {metricsGrid.map((m) => (
-              <div key={m.label} className="rounded-xl bg-secondary/60 border border-border p-3.5">
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">{m.label}</p>
-                <p className="text-sm font-bold font-['Space_Grotesk'] text-foreground">{m.value}</p>
-              </div>
-            ))}
-          </div>
-        </motion.section>
-
-        {/* SECTION 5 — Company News */}
-        <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}>
-          <SectionTitle icon={Newspaper} title="Company News" />
-          <div className="flex flex-col gap-3">
-            {news.map((item, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.55 + i * 0.06 }}
-                className="p-3.5 rounded-xl bg-secondary/40 border border-border/60"
-              >
-                <p className="text-[10px] text-primary font-medium mb-1">{item.date}</p>
-                <p className="text-sm font-semibold text-foreground font-['Space_Grotesk'] mb-0.5">{item.headline}</p>
-                <p className="text-xs text-muted-foreground leading-relaxed">{item.summary}</p>
-              </motion.div>
-            ))}
-          </div>
-        </motion.section>
-
-        {/* SECTION 6 — About & History */}
-        <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}>
-          <SectionTitle icon={BookOpen} title="About & History" />
-          
-          <p className="text-sm leading-relaxed text-muted-foreground mb-5">{history.foundingStory}</p>
-
-          <h4 className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2 font-medium">Milestones</h4>
-          <div className="flex flex-col gap-1.5 mb-5">
-            {history.milestones.map((m, i) => (
-              <div key={i} className="flex items-center gap-2.5 py-1.5">
-                <div className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
-                <p className="text-xs text-foreground/80">{m}</p>
-              </div>
-            ))}
-          </div>
-
-          <h4 className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2 font-medium">Key Products & Services</h4>
-          <div className="flex flex-wrap gap-2 mb-5">
-            {history.keyProducts.map((p) => (
-              <span key={p} className="text-xs px-3 py-1.5 rounded-full border border-border bg-secondary text-muted-foreground">
-                {p}
-              </span>
-            ))}
-          </div>
-
-          <h4 className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2 font-medium">Competitors</h4>
-          <div className="flex flex-wrap gap-2">
-            {history.competitors.map((c) => (
-              <span key={c} className="text-xs px-3 py-1.5 rounded-full border border-primary/30 bg-primary/10 text-primary">
-                {c}
-              </span>
-            ))}
-          </div>
-        </motion.section>
+            {/* SECTION 6 — About & History */}
+            {history && (history.foundingStory || history.milestones.length > 0) && (
+              <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}>
+                <SectionTitle icon={BookOpen} title="About & History" />
+                {history.foundingStory && (
+                  <p className="text-sm leading-relaxed text-muted-foreground mb-5">{history.foundingStory}</p>
+                )}
+                {history.milestones.length > 0 && (
+                  <>
+                    <h4 className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2 font-medium">Milestones</h4>
+                    <div className="flex flex-col gap-1.5 mb-5">
+                      {history.milestones.map((m, i) => (
+                        <div key={i} className="flex items-center gap-2.5 py-1.5">
+                          <div className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
+                          <p className="text-xs text-foreground/80">{m}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+                {history.keyProducts.length > 0 && (
+                  <>
+                    <h4 className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2 font-medium">Key Products & Services</h4>
+                    <div className="flex flex-wrap gap-2 mb-5">
+                      {history.keyProducts.map((p) => (
+                        <span key={p} className="text-xs px-3 py-1.5 rounded-full border border-border bg-secondary text-muted-foreground">
+                          {p}
+                        </span>
+                      ))}
+                    </div>
+                  </>
+                )}
+                {history.competitors.length > 0 && (
+                  <>
+                    <h4 className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2 font-medium">Competitors</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {history.competitors.map((c) => (
+                        <span key={c} className="text-xs px-3 py-1.5 rounded-full border border-primary/30 bg-primary/10 text-primary">
+                          {c}
+                        </span>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </motion.section>
+            )}
+          </>
+        )}
       </div>
     </motion.div>
   );
