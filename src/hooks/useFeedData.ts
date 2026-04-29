@@ -1,4 +1,5 @@
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import { useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { CompanyData, CompanyCategory } from "@/data/mockFinancials";
 import { companies as mockCompanies } from "@/data/mockFinancials";
@@ -16,6 +17,9 @@ export interface FeedCompany extends CompanyData {
   roe?: string;
   sector?: string;
 }
+
+const FIRST_PAGE_SIZE = 15;
+const NEXT_PAGE_SIZE = 10;
 
 function mapDbToCompany(item: any): FeedCompany {
   const company = item.companies;
@@ -57,11 +61,26 @@ function mapDbToCompany(item: any): FeedCompany {
   };
 }
 
+interface PageResult {
+  items: any[];
+  nextOffset: number | null;
+}
+
 export function useFeedData(useMockData = false) {
-  return useQuery({
-    queryKey: ["feed", useMockData],
-    queryFn: async (): Promise<FeedCompany[]> => {
-      if (useMockData) return mockCompanies as FeedCompany[];
+  const mockQuery = useQuery({
+    queryKey: ["feed-mock"],
+    queryFn: async (): Promise<FeedCompany[]> => mockCompanies as FeedCompany[],
+    enabled: useMockData,
+    staleTime: Infinity,
+  });
+
+  const infiniteQuery = useInfiniteQuery({
+    queryKey: ["feed-infinite"],
+    enabled: !useMockData,
+    initialPageParam: 0,
+    queryFn: async ({ pageParam }): Promise<PageResult> => {
+      const offset = pageParam as number;
+      const limit = offset === 0 ? FIRST_PAGE_SIZE : NEXT_PAGE_SIZE;
       const { data, error } = await supabase
         .from("report_summaries")
         .select(`
@@ -76,27 +95,39 @@ export function useFeedData(useMockData = false) {
           )
         `)
         .order("processed_at", { ascending: false })
-        .limit(20);
+        .range(offset, offset + limit - 1);
 
       if (error) {
         console.error("Feed query error:", error);
         throw error;
       }
 
-      if (!data || data.length === 0) {
-        return [];
-      }
-
-      // Deduplicate: latest summary per company
-      const seen = new Set<string>();
-      const feed = data.filter((item) => {
-        if (seen.has(item.company_id)) return false;
-        seen.add(item.company_id);
-        return true;
-      });
-
-      return feed.map(mapDbToCompany);
+      const items = data || [];
+      const nextOffset = items.length < limit ? null : offset + items.length;
+      return { items, nextOffset };
     },
+    getNextPageParam: (last) => last.nextOffset ?? undefined,
     staleTime: 5 * 60 * 1000,
   });
+
+  const data = useMemo<FeedCompany[]>(() => {
+    if (useMockData) return mockQuery.data ?? [];
+    const allItems = infiniteQuery.data?.pages.flatMap((p) => p.items) ?? [];
+    // Deduplicate across all loaded pages: keep first (latest) per company
+    const seen = new Set<string>();
+    const deduped = allItems.filter((item) => {
+      if (seen.has(item.company_id)) return false;
+      seen.add(item.company_id);
+      return true;
+    });
+    return deduped.map(mapDbToCompany);
+  }, [useMockData, mockQuery.data, infiniteQuery.data]);
+
+  return {
+    data,
+    isLoading: useMockData ? mockQuery.isLoading : infiniteQuery.isLoading,
+    fetchNextPage: infiniteQuery.fetchNextPage,
+    hasNextPage: useMockData ? false : infiniteQuery.hasNextPage,
+    isFetchingNextPage: infiniteQuery.isFetchingNextPage,
+  };
 }

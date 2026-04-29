@@ -38,7 +38,7 @@ const Index = () => {
   const { useMockData, toggleMockData } = useSettings();
 
   // Fetch real data from Supabase (falls back to mock)
-  const { data: companies = [], isLoading } = useFeedData(useMockData);
+  const { data: companies, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useFeedData(useMockData);
 
   const openDeepDive = useCallback((company: CompanyData) => {
     window.history.pushState({ overlay: "deepDive" }, "");
@@ -71,6 +71,15 @@ const Index = () => {
       return null;
     });
   }, []);
+
+  // Smart prefetch: when user is within 3 cards of the end, fetch the next page
+  useEffect(() => {
+    if (!hasNextPage || isFetchingNextPage) return;
+    if (companies.length === 0) return;
+    if (activeIndex >= companies.length - 3) {
+      fetchNextPage();
+    }
+  }, [activeIndex, companies.length, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   useEffect(() => {
     const handlePopState = () => {
