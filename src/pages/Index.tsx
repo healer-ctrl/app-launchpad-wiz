@@ -197,22 +197,6 @@ const Index = () => {
             </div>
           )}
 
-          {/* Side progress bar */}
-          <div className="fixed right-2 top-1/2 -translate-y-1/2 z-40 flex flex-col gap-1">
-            {filteredCompanies.map((_, i) => (
-              <motion.div
-                key={i}
-                className="w-1 rounded-full bg-muted-foreground/20"
-                animate={{
-                  height: i === activeIndex ? 20 : 6,
-                  backgroundColor: i === activeIndex
-                    ? "hsl(var(--primary))"
-                    : "hsl(var(--muted-foreground) / 0.2)",
-                }}
-                transition={{ duration: 0.3 }}
-              />
-            ))}
-          </div>
         </>
       )}
 
