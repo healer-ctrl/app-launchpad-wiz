@@ -22,15 +22,14 @@ Deno.serve(async (req) => {
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const lovableApiKey = Deno.env.get("LOVABLE_API_KEY");
+    const geminiApiKey = Deno.env.get("GEMINI_API_KEY");
 
-    if (!lovableApiKey) {
-      throw new Error("LOVABLE_API_KEY is not configured");
+    if (!geminiApiKey) {
+      throw new Error("GEMINI_API_KEY is not configured");
     }
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // 1. Fetch report
     const { data: report, error: reportError } = await supabase
       .from("reports")
       .select("*, companies(*)")
@@ -41,39 +40,25 @@ Deno.serve(async (req) => {
       throw new Error(`Report not found: ${reportError?.message}`);
     }
 
-    // 2. Update status to processing
-    await supabase
-      .from("reports")
-      .update({ status: "processing" })
-      .eq("id", report_id);
+    await supabase.from("reports").update({ status: "processing" }).eq("id", report_id);
 
-    // 3. Download PDF as base64
     let pdfBase64 = "";
     if (report.report_url) {
-      try {
-        const pdfResponse = await fetch(report.report_url, {
-          headers: {
-            "User-Agent":
-              "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36",
-          },
-        });
-        if (!pdfResponse.ok) {
-          throw new Error(`PDF download failed: ${pdfResponse.status}`);
-        }
-        const pdfBuffer = new Uint8Array(await pdfResponse.arrayBuffer());
-        // Encode in chunks to avoid stack overflow on large PDFs
-        let binary = "";
-        const chunkSize = 8192;
-        for (let i = 0; i < pdfBuffer.length; i += chunkSize) {
-          const chunk = pdfBuffer.subarray(i, i + chunkSize);
-          binary += String.fromCharCode(...chunk);
-        }
-        pdfBase64 = btoa(binary);
-        console.log(`PDF downloaded: ${pdfBase64.length} chars base64`);
-      } catch (e) {
-        console.error("PDF download error:", e);
-        throw new Error(`Failed to download PDF: ${e}`);
+      const pdfResponse = await fetch(report.report_url, {
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36",
+        },
+      });
+      if (!pdfResponse.ok) throw new Error(`PDF download failed: ${pdfResponse.status}`);
+      const pdfBuffer = new Uint8Array(await pdfResponse.arrayBuffer());
+      let binary = "";
+      const chunkSize = 8192;
+      for (let i = 0; i < pdfBuffer.length; i += chunkSize) {
+        binary += String.fromCharCode(...pdfBuffer.subarray(i, i + chunkSize));
       }
+      pdfBase64 = btoa(binary);
+      console.log(`PDF downloaded: ${pdfBase64.length} chars base64`);
     }
 
     if (!pdfBase64) {
@@ -81,7 +66,6 @@ Deno.serve(async (req) => {
       throw new Error("No PDF data available");
     }
 
-    // 4. Send to Gemini via Lovable AI Gateway
     const prompt = `You are a financial analyst. Analyze this quarterly earnings report PDF and return ONLY a raw JSON object, no markdown, no backticks:
 {
   "headline": "one punchy line summarizing the biggest result",
@@ -104,81 +88,61 @@ Deno.serve(async (req) => {
 Company: ${report.companies?.name} (${report.companies?.ticker})
 Return ONLY valid JSON.`;
 
+    // Direct Google Generative Language API
     const aiResponse = await fetch(
-      "https://ai.gateway.lovable.dev/v1/chat/completions",
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiApiKey}`,
       {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${lovableApiKey}`,
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
-          messages: [
-            {
-              role: "system",
-              content:
-                "You are a financial analyst AI. Always respond with valid JSON only, no markdown fences.",
-            },
+          contents: [
             {
               role: "user",
-              content: [
-                { type: "text", text: prompt },
-                {
-                  type: "image_url",
-                  image_url: {
-                    url: `data:application/pdf;base64,${pdfBase64}`,
-                  },
-                },
+              parts: [
+                { text: prompt },
+                { inline_data: { mime_type: "application/pdf", data: pdfBase64 } },
               ],
             },
           ],
+          generationConfig: {
+            responseMimeType: "application/json",
+            temperature: 0.3,
+          },
         }),
       }
     );
 
     if (!aiResponse.ok) {
       const errorText = await aiResponse.text();
-      console.error("AI Gateway error:", aiResponse.status, errorText);
+      console.error("Gemini API error:", aiResponse.status, errorText);
       await supabase.from("reports").update({ status: "failed" }).eq("id", report_id);
 
       if (aiResponse.status === 429) {
         return new Response(
-          JSON.stringify({ error: "Rate limit exceeded, try again later" }),
+          JSON.stringify({ error: "Gemini rate limit exceeded, try again later" }),
           { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-      if (aiResponse.status === 402) {
-        return new Response(
-          JSON.stringify({ error: "Credits exhausted, please add funds" }),
-          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      throw new Error(`AI Gateway error: ${aiResponse.status}`);
+      throw new Error(`Gemini error: ${aiResponse.status} ${errorText}`);
     }
 
     const aiData = await aiResponse.json();
-    let content = aiData.choices?.[0]?.message?.content || "";
+    let content = aiData.candidates?.[0]?.content?.parts?.[0]?.text || "";
     content = content.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
 
     let parsed: any;
     try {
       parsed = JSON.parse(content);
     } catch {
-      console.error("Failed to parse AI response:", content);
+      console.error("Failed to parse Gemini response:", content);
       await supabase.from("reports").update({ status: "failed" }).eq("id", report_id);
-      throw new Error("AI returned invalid JSON");
+      throw new Error("Gemini returned invalid JSON");
     }
 
-    // 5. Update company sector if we got one
     if (parsed.sector && report.company_id) {
-      await supabase
-        .from("companies")
-        .update({ sector: parsed.sector })
-        .eq("id", report.company_id);
+      await supabase.from("companies").update({ sector: parsed.sector }).eq("id", report.company_id);
     }
 
-    // 6. Insert into report_summaries with all fields
     const { error: insertError } = await supabase.from("report_summaries").insert({
       report_id: report_id,
       company_id: report.company_id,
@@ -200,11 +164,8 @@ Return ONLY valid JSON.`;
       processed_at: new Date().toISOString(),
     });
 
-    if (insertError) {
-      throw new Error(`Failed to insert summary: ${insertError.message}`);
-    }
+    if (insertError) throw new Error(`Failed to insert summary: ${insertError.message}`);
 
-    // 7. Update report status to done
     await supabase.from("reports").update({ status: "done" }).eq("id", report_id);
 
     console.log(`✅ Report processed: ${report.companies?.ticker}`);
