@@ -62,6 +62,57 @@ export type Database = {
         }
         Relationships: []
       }
+      company_profiles: {
+        Row: {
+          ceo: string | null
+          company_id: string
+          competitors: Json | null
+          created_at: string
+          description: string | null
+          employees: string | null
+          founded: string | null
+          founding_story: string | null
+          generated_at: string
+          headquarters: string | null
+          id: string
+          industry: string | null
+          key_products: Json | null
+          milestones: Json | null
+        }
+        Insert: {
+          ceo?: string | null
+          company_id: string
+          competitors?: Json | null
+          created_at?: string
+          description?: string | null
+          employees?: string | null
+          founded?: string | null
+          founding_story?: string | null
+          generated_at?: string
+          headquarters?: string | null
+          id?: string
+          industry?: string | null
+          key_products?: Json | null
+          milestones?: Json | null
+        }
+        Update: {
+          ceo?: string | null
+          company_id?: string
+          competitors?: Json | null
+          created_at?: string
+          description?: string | null
+          employees?: string | null
+          founded?: string | null
+          founding_story?: string | null
+          generated_at?: string
+          headquarters?: string | null
+          id?: string
+          industry?: string | null
+          key_products?: Json | null
+          milestones?: Json | null
+        }
+        Relationships: []
+      }
       report_summaries: {
         Row: {
           beat_or_miss: string | null
