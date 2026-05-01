@@ -70,31 +70,31 @@ const CompanyDeepDive = ({ company, onBack }: CompanyDeepDiveProps) => {
     const p = live.profile;
     const ls = live.latestSummary;
     overview = {
-      sector: ls?.sector || "—",
-      industry: p?.industry || "—",
+      sector: ls?.sector || "N.A.",
+      industry: p?.industry || "N.A.",
       description: p?.description || "Profile is being generated…",
-      founded: p?.founded || "—",
-      headquarters: p?.headquarters || "—",
-      ceo: p?.ceo || "—",
-      employees: p?.employees || "—",
+      founded: p?.founded || "N.A.",
+      headquarters: p?.headquarters || "N.A.",
+      ceo: p?.ceo || "N.A.",
+      employees: p?.employees || "N.A.",
     };
     stockInfo = [
-      { label: "Latest Quarter", value: ls?.quarter || "—" },
-      { label: "Revenue", value: ls?.revenue || "—" },
-      { label: "Net Profit", value: ls?.profit || "—" },
-      { label: "Growth (YoY)", value: ls?.growth || "—" },
-      { label: "P/E Ratio", value: ls?.pe_ratio || "—" },
-      { label: "Beat/Miss", value: ls?.beat_or_miss || "—" },
+      { label: "Latest Quarter", value: ls?.quarter || "N.A." },
+      { label: "Revenue", value: ls?.revenue || "N.A." },
+      { label: "Net Profit", value: ls?.profit || "N.A." },
+      { label: "Growth (YoY)", value: ls?.growth || "N.A." },
+      { label: "P/E Ratio", value: ls?.pe_ratio || "N.A." },
+      { label: "Beat/Miss", value: ls?.beat_or_miss || "N.A." },
     ];
     quarterlyTimeline = live.timeline;
     metricsGrid = [
-      { label: "Revenue", value: ls?.revenue || "—" },
-      { label: "Net Profit", value: ls?.profit || "—" },
-      { label: "EPS", value: ls?.eps || "—" },
-      { label: "ROE", value: ls?.roe || "—" },
-      { label: "EBITDA", value: ls?.ebitda || "—" },
-      { label: "Debt/Equity", value: ls?.debt_equity || "—" },
-      { label: "Current Ratio", value: ls?.current_ratio || "—" },
+      { label: "Revenue", value: ls?.revenue || "N.A." },
+      { label: "Net Profit", value: ls?.profit || "N.A." },
+      { label: "EPS", value: ls?.eps || "N.A." },
+      { label: "ROE", value: ls?.roe || "N.A." },
+      { label: "EBITDA", value: ls?.ebitda || "N.A." },
+      { label: "Debt/Equity", value: ls?.debt_equity || "N.A." },
+      { label: "Current Ratio", value: ls?.current_ratio || "N.A." },
     ];
     news = ls?.headline
       ? [{ date: ls?.quarter || "Latest", headline: ls.headline, summary: ls.summary || "" }]
