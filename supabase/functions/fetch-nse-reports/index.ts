@@ -84,13 +84,30 @@ Deno.serve(async (req) => {
         continue;
       }
 
-      // Only process financial results / board meeting outcomes
-      const isFinancial =
+      // STRICT FILTER: only quarterly/annual financial result PDFs.
+      // Must explicitly mention "financial result(s)" and not be a clarification,
+      // intimation, postponement, or newspaper publication notice.
+      const isFinancialResult =
         desc.includes("financial result") ||
-        desc.includes("outcome of board meeting");
-      const isClarification = desc.includes("clarification");
+        desc.includes("financial results") ||
+        desc.includes("quarterly result") ||
+        desc.includes("annual result") ||
+        desc.includes("audited financial") ||
+        desc.includes("unaudited financial");
 
-      if (!isFinancial || isClarification) {
+      const isNoise =
+        desc.includes("clarification") ||
+        desc.includes("intimation") ||
+        desc.includes("postpone") ||
+        desc.includes("newspaper") ||
+        desc.includes("notice of") ||
+        desc.includes("press release") ||
+        desc.includes("schedule of") ||
+        desc.includes("investor presentation") ||
+        desc.includes("transcript") ||
+        desc.includes("recording");
+
+      if (!isFinancialResult || isNoise) {
         skippedFilter++;
         continue;
       }

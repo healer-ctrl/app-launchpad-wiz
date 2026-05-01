@@ -58,8 +58,13 @@ Deno.serve(async (req) => {
   "competitors": ["array of 3-5 main competitors"]
 }
 
-Company: ${company.name} (Ticker: ${company.ticker}, Exchange: ${company.exchange ?? "N/A"})
-Use only well-known public information. If unsure of a value, give your best estimate.`;
+Company: ${company.name} (Ticker: ${company.ticker}, Exchange: ${company.exchange ?? "N.A."})
+
+RULES:
+- Use only well-known, verifiable public information.
+- If you do not know a value with reasonable confidence, return the exact string "N.A." for that field.
+- For arrays (milestones, key_products, competitors), if you don't have confident info, return an empty array [].
+- Do NOT guess, fabricate, or estimate. Accuracy over completeness.`;
 
     const aiResponse = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiApiKey}`,
