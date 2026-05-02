@@ -113,6 +113,36 @@ export type Database = {
         }
         Relationships: []
       }
+      device_tokens: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          id: string
+          install_id: string
+          platform: string
+          token: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          install_id: string
+          platform: string
+          token: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          install_id?: string
+          platform?: string
+          token?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       report_summaries: {
         Row: {
           beat_or_miss: string | null
