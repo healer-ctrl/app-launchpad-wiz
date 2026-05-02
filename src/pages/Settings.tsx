@@ -1,8 +1,9 @@
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Bell } from "lucide-react";
 import { motion } from "framer-motion";
 import { Switch } from "@/components/ui/switch";
 import { useSettings } from "@/hooks/useSettings";
 import { useNseStatus } from "@/hooks/useNseStatus";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
 
 interface SettingsProps {
   onBack: () => void;
@@ -11,6 +12,8 @@ interface SettingsProps {
 const Settings = ({ onBack }: SettingsProps) => {
   const { useMockData, toggleMockData } = useSettings();
   const { data: nseStatus } = useNseStatus();
+  const { enabled: pushEnabled, supported: pushSupported, loading: pushLoading, toggle: togglePush } =
+    usePushNotifications();
 
   return (
     <motion.div
@@ -31,6 +34,37 @@ const Settings = ({ onBack }: SettingsProps) => {
       </header>
 
       <div className="px-5 py-6 space-y-6">
+        {/* Notifications */}
+        <section>
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+            Notifications
+          </h2>
+          <div className="rounded-xl border border-border bg-card p-4">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-start gap-3 min-w-0">
+                <div className="mt-0.5 p-2 rounded-lg bg-primary/10 text-primary shrink-0">
+                  <Bell className="w-4 h-4" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-foreground">New report alerts</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {!pushSupported
+                      ? "Available in the installed mobile app"
+                      : pushEnabled
+                        ? "You'll get a push the moment a new report lands"
+                        : "Get notified instantly when a new report is ready"}
+                  </p>
+                </div>
+              </div>
+              <Switch
+                checked={pushEnabled}
+                disabled={pushLoading || !pushSupported}
+                onCheckedChange={(v) => togglePush(v)}
+              />
+            </div>
+          </div>
+        </section>
+
         {/* Developer Options */}
         <section>
           <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
