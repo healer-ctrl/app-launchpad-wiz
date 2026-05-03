@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { motion, useMotionValue, useTransform, AnimatePresence } from "framer-motion";
-import { TrendingUp, TrendingDown, FileText, Bookmark } from "lucide-react";
+import { TrendingUp, TrendingDown, FileText, Bookmark, Share2 } from "lucide-react";
 import type { CompanyData } from "@/data/mockFinancials";
 import CompanyLogo from "@/components/CompanyLogo";
 
@@ -9,10 +9,11 @@ interface FinanceCardProps {
   onReadReport?: () => void;
   onSwipeLeft?: () => void;
   onBookmark?: () => void;
+  onShare?: () => void;
   isBookmarked?: boolean;
 }
 
-const FinanceCard = ({ company, onReadReport, onSwipeLeft, onBookmark, isBookmarked = false }: FinanceCardProps) => {
+const FinanceCard = ({ company, onReadReport, onSwipeLeft, onBookmark, onShare, isBookmarked = false }: FinanceCardProps) => {
   const isPositive = company.changePercent >= 0;
   const [showBookmarkAnim, setShowBookmarkAnim] = useState(false);
   const x = useMotionValue(0);
