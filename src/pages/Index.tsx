@@ -252,6 +252,14 @@ const Index = () => {
       <AnimatePresence>
         {showSettings && <Settings onBack={() => setShowSettings(false)} />}
       </AnimatePresence>
+
+      {/* Off-screen snapshot target for share-as-image */}
+      <div
+        aria-hidden
+        style={{ position: "fixed", left: -99999, top: 0, pointerEvents: "none" }}
+      >
+        {sharePending && <ShareableCard ref={shareRef} company={sharePending} />}
+      </div>
     </div>
   );
 };
