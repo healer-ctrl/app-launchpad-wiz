@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { motion, useMotionValue, useTransform, AnimatePresence } from "framer-motion";
-import { TrendingUp, TrendingDown, FileText, Bookmark } from "lucide-react";
+import { TrendingUp, TrendingDown, FileText, Bookmark, Share2 } from "lucide-react";
 import type { CompanyData } from "@/data/mockFinancials";
 import CompanyLogo from "@/components/CompanyLogo";
 
@@ -9,10 +9,11 @@ interface FinanceCardProps {
   onReadReport?: () => void;
   onSwipeLeft?: () => void;
   onBookmark?: () => void;
+  onShare?: () => void;
   isBookmarked?: boolean;
 }
 
-const FinanceCard = ({ company, onReadReport, onSwipeLeft, onBookmark, isBookmarked = false }: FinanceCardProps) => {
+const FinanceCard = ({ company, onReadReport, onSwipeLeft, onBookmark, onShare, isBookmarked = false }: FinanceCardProps) => {
   const isPositive = company.changePercent >= 0;
   const [showBookmarkAnim, setShowBookmarkAnim] = useState(false);
   const x = useMotionValue(0);
@@ -186,7 +187,14 @@ const FinanceCard = ({ company, onReadReport, onSwipeLeft, onBookmark, isBookmar
             <FileText className="w-3.5 h-3.5" />
             Read Full Report
           </button>
-          <span className="text-[10px] text-muted-foreground/50">← swipe for deep dive</span>
+          <button
+            onClick={onShare}
+            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary font-medium transition-colors"
+            aria-label="Share as image"
+          >
+            <Share2 className="w-3.5 h-3.5" />
+            Share
+          </button>
         </motion.div>
 
       </motion.div>

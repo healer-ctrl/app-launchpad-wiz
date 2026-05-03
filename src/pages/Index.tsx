@@ -14,6 +14,8 @@ import BottomNav, { type TabType } from "@/components/BottomNav";
 import SearchTab from "@/components/SearchTab";
 import BookmarksTab from "@/components/BookmarksTab";
 import Settings from "@/pages/Settings";
+import ShareableCard from "@/components/ShareableCard";
+import { useShareCard } from "@/hooks/useShareCard";
 
 type FilterType = "all" | CompanyCategory;
 
@@ -36,6 +38,7 @@ const Index = () => {
   const [bookmarkedIds, setBookmarkedIds] = useState<Set<string>>(new Set());
 
   const { useMockData, toggleMockData } = useSettings();
+  const { ref: shareRef, pendingCompany: sharePending, share: shareCompany } = useShareCard();
 
   // Fetch real data from Supabase (falls back to mock)
   const { data: companies, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useFeedData(useMockData);
@@ -191,6 +194,7 @@ const Index = () => {
                   onReadReport={() => setReportCompany(company)}
                   onSwipeLeft={() => openDeepDive(company)}
                   onBookmark={() => toggleBookmark(company.id)}
+                  onShare={() => shareCompany(company)}
                   isBookmarked={bookmarkedIds.has(company.id)}
                 />
               ))}
@@ -248,6 +252,14 @@ const Index = () => {
       <AnimatePresence>
         {showSettings && <Settings onBack={() => setShowSettings(false)} />}
       </AnimatePresence>
+
+      {/* Off-screen snapshot target for share-as-image */}
+      <div
+        aria-hidden
+        style={{ position: "fixed", left: -99999, top: 0, pointerEvents: "none" }}
+      >
+        {sharePending && <ShareableCard ref={shareRef} company={sharePending} />}
+      </div>
     </div>
   );
 };
