@@ -38,6 +38,7 @@ const Index = () => {
   const [bookmarkedIds, setBookmarkedIds] = useState<Set<string>>(new Set());
 
   const { useMockData, toggleMockData } = useSettings();
+  const { ref: shareRef, pendingCompany: sharePending, share: shareCompany } = useShareCard();
 
   // Fetch real data from Supabase (falls back to mock)
   const { data: companies, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useFeedData(useMockData);
