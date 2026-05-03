@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from "@capacitor/cli";
 
 const config: CapacitorConfig = {
-  appId: "app.lovable.500fd66701e543bc946e191d9062d4f8",
+  appId: "com.go.finpulse",
   appName: "FinPulse",
   webDir: "dist",
   server: {
