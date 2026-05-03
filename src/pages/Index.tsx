@@ -194,6 +194,7 @@ const Index = () => {
                   onReadReport={() => setReportCompany(company)}
                   onSwipeLeft={() => openDeepDive(company)}
                   onBookmark={() => toggleBookmark(company.id)}
+                  onShare={() => shareCompany(company)}
                   isBookmarked={bookmarkedIds.has(company.id)}
                 />
               ))}
