@@ -187,7 +187,14 @@ const FinanceCard = ({ company, onReadReport, onSwipeLeft, onBookmark, onShare, 
             <FileText className="w-3.5 h-3.5" />
             Read Full Report
           </button>
-          <span className="text-[10px] text-muted-foreground/50">← swipe for deep dive</span>
+          <button
+            onClick={onShare}
+            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary font-medium transition-colors"
+            aria-label="Share as image"
+          >
+            <Share2 className="w-3.5 h-3.5" />
+            Share
+          </button>
         </motion.div>
 
       </motion.div>
