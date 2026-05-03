@@ -1,7 +1,7 @@
-import { Home, Bookmark, Search } from "lucide-react";
+import { Home, Bookmark, Search, Trophy } from "lucide-react";
 import { motion } from "framer-motion";
 
-export type TabType = "feed" | "bookmarks" | "search";
+export type TabType = "feed" | "leaderboard" | "bookmarks" | "search";
 
 interface BottomNavProps {
   activeTab: TabType;
@@ -11,6 +11,7 @@ interface BottomNavProps {
 
 const tabs = [
   { id: "feed" as TabType, icon: Home, label: "Feed" },
+  { id: "leaderboard" as TabType, icon: Trophy, label: "Top" },
   { id: "bookmarks" as TabType, icon: Bookmark, label: "Saved" },
   { id: "search" as TabType, icon: Search, label: "Search" },
 ];

@@ -13,6 +13,7 @@ import CompanyDetailPage from "@/components/CompanyDetailPage";
 import BottomNav, { type TabType } from "@/components/BottomNav";
 import SearchTab from "@/components/SearchTab";
 import BookmarksTab from "@/components/BookmarksTab";
+import LeaderboardTab from "@/components/LeaderboardTab";
 import Settings from "@/pages/Settings";
 import ShareableCard from "@/components/ShareableCard";
 import { useShareCard } from "@/hooks/useShareCard";
@@ -210,6 +211,10 @@ const Index = () => {
           onSelectCompany={openDetail}
           onRemoveBookmark={(id) => toggleBookmark(id)}
         />
+      )}
+
+      {activeTab === "leaderboard" && (
+        <LeaderboardTab onSelectCompany={openDetail} />
       )}
 
       {activeTab === "search" && (
