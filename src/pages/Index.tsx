@@ -14,6 +14,8 @@ import BottomNav, { type TabType } from "@/components/BottomNav";
 import SearchTab from "@/components/SearchTab";
 import BookmarksTab from "@/components/BookmarksTab";
 import Settings from "@/pages/Settings";
+import ShareableCard from "@/components/ShareableCard";
+import { useShareCard } from "@/hooks/useShareCard";
 
 type FilterType = "all" | CompanyCategory;
 
