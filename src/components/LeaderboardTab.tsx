@@ -129,12 +129,12 @@ const LeaderboardTab = ({ onSelectCompany }: LeaderboardTabProps) => {
                       </div>
                       <p className="text-xs text-muted-foreground truncate">{e.headline}</p>
                     </div>
-                    <div className="text-right shrink-0">
-                      <div className="flex items-center gap-1 text-primary text-sm font-bold">
-                        <TrendingUp className="w-3 h-3" />
-                        {e.growth || "—"}
+                    <div className="text-right shrink-0 max-w-[80px]">
+                      <div className="flex items-center justify-end gap-1 text-primary text-sm font-bold">
+                        <TrendingUp className="w-3 h-3 shrink-0" />
+                        <span className="truncate">{shortGrowth(e.growth)}</span>
                       </div>
-                      <p className="text-[10px] text-muted-foreground mt-0.5">{e.revenue}</p>
+                      <p className="text-[10px] text-muted-foreground mt-0.5 truncate">{e.revenue}</p>
                     </div>
                   </button>
                 ))}
