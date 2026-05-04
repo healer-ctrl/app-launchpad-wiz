@@ -23,6 +23,12 @@ const rankStyles = [
   "bg-secondary text-muted-foreground",
 ];
 
+function shortGrowth(g: string): string {
+  if (!g) return "—";
+  const m = g.match(/[+-]?\d+(?:\.\d+)?\s*%/);
+  return m ? m[0].replace(/\s+/g, "") : g.split(/[\s(]/)[0] || "—";
+}
+
 function entryToCompany(e: LeaderboardEntry): CompanyData {
   return {
     id: e.companyId,
