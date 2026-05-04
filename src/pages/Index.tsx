@@ -38,6 +38,12 @@ const Index = () => {
   const [deepDiveCompany, setDeepDiveCompany] = useState<CompanyData | null>(null);
   const [detailCompany, setDetailCompany] = useState<CompanyData | null>(null);
   const [bookmarkedIds, setBookmarkedIds] = useState<Set<string>>(new Set());
+  const [showSplash, setShowSplash] = useState(true);
+
+  useEffect(() => {
+    const t = setTimeout(() => setShowSplash(false), 2200);
+    return () => clearTimeout(t);
+  }, []);
 
   const { useMockData, toggleMockData } = useSettings();
   const { ref: shareRef, pendingCompany: sharePending, share: shareCompany } = useShareCard();
