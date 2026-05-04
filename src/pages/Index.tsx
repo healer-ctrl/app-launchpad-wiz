@@ -16,6 +16,7 @@ import BookmarksTab from "@/components/BookmarksTab";
 import LeaderboardTab from "@/components/LeaderboardTab";
 import Settings from "@/pages/Settings";
 import ShareableCard from "@/components/ShareableCard";
+import SplashScreen from "@/components/SplashScreen";
 import { useShareCard } from "@/hooks/useShareCard";
 
 type FilterType = "all" | CompanyCategory;
