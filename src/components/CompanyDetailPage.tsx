@@ -13,11 +13,19 @@ const CompanyDetailPage = ({ company, onBack }: CompanyDetailPageProps) => {
   const detail = companyDetails[company.id];
   const isPositive = company.changePercent >= 0;
 
+  // Extract just the percentage (e.g. "+195.9%") from possibly verbose growth strings
+  const shortenMetric = (v: string | undefined | null): string => {
+    if (!v) return "—";
+    const s = String(v).trim();
+    const m = s.match(/[+-]?\d+(?:\.\d+)?\s*%/);
+    return m ? m[0].replace(/\s+/g, "") : s.split(/[\s(]/)[0] || "—";
+  };
+
   const metrics = [
-    { label: "Revenue", value: company.revenue },
-    { label: "Net Profit", value: company.profit },
-    { label: "EPS", value: detail?.eps ?? "—" },
-    { label: "YoY Growth", value: company.growth },
+    { label: "Revenue", value: shortenMetric(company.revenue) },
+    { label: "Net Profit", value: shortenMetric(company.profit) },
+    { label: "EPS", value: shortenMetric(detail?.eps) },
+    { label: "YoY Growth", value: shortenMetric(company.growth) },
   ];
 
   return (
