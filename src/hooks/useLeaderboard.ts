@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 export type LeaderboardRegion = "all" | "india" | "us";
+export type LeaderboardMode = "beat" | "yoy" | "revenue" | "profit" | "eps";
 
 export interface LeaderboardEntry {
   id: string;
@@ -14,8 +15,13 @@ export interface LeaderboardEntry {
   growth: string;
   growthValue: number;
   revenue: string;
+  revenueValue: number;
   profit: string;
+  profitValue: number;
+  eps: string;
+  epsValue: number;
   quarter: string;
+  beatOrMiss: string;
 }
 
 export interface QuarterGroup {
@@ -23,20 +29,25 @@ export interface QuarterGroup {
   entries: LeaderboardEntry[];
 }
 
-function parseGrowth(g: string | null): number {
-  if (!g) return 0;
-  const n = parseFloat(g.replace(/[^-\d.]/g, ""));
-  return isNaN(n) ? 0 : n;
+function parseNum(s: string | null): number {
+  if (!s) return 0;
+  const str = String(s);
+  // Pull first numeric (with optional sign / decimal) substring
+  const m = str.match(/-?\d+(?:\.\d+)?/);
+  if (!m) return 0;
+  let n = parseFloat(m[0]);
+  if (isNaN(n)) return 0;
+  const lower = str.toLowerCase();
+  if (/\bcr\b|crore/.test(lower)) n *= 1e7;
+  else if (/\blakh|lac\b/.test(lower)) n *= 1e5;
+  else if (/\bb\b|billion/.test(lower)) n *= 1e9;
+  else if (/\bm\b|million/.test(lower)) n *= 1e6;
+  return n;
 }
 
-// Normalize quarter labels like "Q4 FY26" / "Q4 FY2026" → "Q4 FY26"
 function normalizeQuarter(q: string | null): string {
   if (!q) return "Unknown";
-  return q
-    .replace(/FY20(\d{2})/i, "FY$1")
-    .replace(/\s+/g, " ")
-    .trim()
-    .toUpperCase();
+  return q.replace(/FY20(\d{2})/i, "FY$1").replace(/\s+/g, " ").trim().toUpperCase();
 }
 
 function quarterSortKey(q: string): number {
@@ -56,20 +67,33 @@ function matchesRegion(exchange: string | null, region: LeaderboardRegion): bool
   return true;
 }
 
-export function useLeaderboard(region: LeaderboardRegion = "all") {
+function rankValue(e: LeaderboardEntry, mode: LeaderboardMode): number {
+  switch (mode) {
+    case "yoy": return e.growthValue;
+    case "revenue": return e.revenueValue;
+    case "profit": return e.profitValue;
+    case "eps": return e.epsValue;
+    case "beat":
+    default: return e.growthValue;
+  }
+}
+
+export function useLeaderboard(region: LeaderboardRegion = "all", mode: LeaderboardMode = "beat") {
   return useQuery({
-    queryKey: ["leaderboard", region],
+    queryKey: ["leaderboard", region, mode],
     queryFn: async (): Promise<QuarterGroup[]> => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("report_summaries")
         .select(`
-          id, company_id, headline, growth, revenue, profit, quarter, beat_or_miss,
+          id, company_id, headline, growth, revenue, profit, eps, quarter, beat_or_miss,
           companies ( id, name, ticker, domain, exchange )
         `)
-        .eq("beat_or_miss", "Beat")
         .order("processed_at", { ascending: false })
         .limit(500);
 
+      if (mode === "beat") query = query.eq("beat_or_miss", "Beat");
+
+      const { data, error } = await query;
       if (error) throw error;
 
       const buckets = new Map<string, LeaderboardEntry[]>();
@@ -87,25 +111,29 @@ export function useLeaderboard(region: LeaderboardRegion = "all") {
           exchange: c.exchange || "",
           headline: row.headline || "",
           growth: row.growth || "",
-          growthValue: parseGrowth(row.growth),
+          growthValue: parseNum(row.growth),
           revenue: row.revenue || "",
+          revenueValue: parseNum(row.revenue),
           profit: row.profit || "",
+          profitValue: parseNum(row.profit),
+          eps: row.eps || "",
+          epsValue: parseNum(row.eps),
           quarter,
+          beatOrMiss: row.beat_or_miss || "",
         };
         if (!buckets.has(quarter)) buckets.set(quarter, []);
         buckets.get(quarter)!.push(entry);
       }
 
-      // Dedupe per company per quarter (keep highest growth)
       const groups: QuarterGroup[] = [];
       for (const [quarter, entries] of buckets) {
         const byCompany = new Map<string, LeaderboardEntry>();
         for (const e of entries) {
           const prev = byCompany.get(e.companyId);
-          if (!prev || e.growthValue > prev.growthValue) byCompany.set(e.companyId, e);
+          if (!prev || rankValue(e, mode) > rankValue(prev, mode)) byCompany.set(e.companyId, e);
         }
         const top = Array.from(byCompany.values())
-          .sort((a, b) => b.growthValue - a.growthValue)
+          .sort((a, b) => rankValue(b, mode) - rankValue(a, mode))
           .slice(0, 5);
         if (top.length) groups.push({ quarter, entries: top });
       }
