@@ -108,7 +108,7 @@ const CompanyDetailPage = ({ company, onBack }: CompanyDetailPageProps) => {
                 <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5">
                   {m.label}
                 </p>
-                <p className="text-lg font-bold font-['Space_Grotesk'] text-foreground">
+                <p className="text-lg font-bold font-['Space_Grotesk'] text-foreground truncate">
                   {m.value}
                 </p>
               </motion.div>
