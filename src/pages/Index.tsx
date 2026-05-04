@@ -141,6 +141,7 @@ const Index = () => {
 
   return (
     <div className="relative min-h-screen bg-background overflow-hidden">
+      <AnimatePresence>{showSplash && <SplashScreen />}</AnimatePresence>
       {/* Top bar */}
       <motion.header
         initial={{ opacity: 0, y: -20 }}
