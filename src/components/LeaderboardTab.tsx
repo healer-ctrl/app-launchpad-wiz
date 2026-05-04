@@ -46,7 +46,7 @@ const LeaderboardTab = ({ onSelectCompany }: LeaderboardTabProps) => {
   const { data: groups, isLoading } = useLeaderboard(region);
 
   return (
-    <div className="min-h-screen bg-background pt-[120px] pb-24">
+    <div className="min-h-screen bg-background pt-[120px] pb-24 max-w-[375px] mx-auto">
       {/* Beta badge + region pills (sit under the existing top header) */}
       <div className="px-5 mb-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
