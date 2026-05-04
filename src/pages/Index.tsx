@@ -16,6 +16,7 @@ import BookmarksTab from "@/components/BookmarksTab";
 import LeaderboardTab from "@/components/LeaderboardTab";
 import Settings from "@/pages/Settings";
 import ShareableCard from "@/components/ShareableCard";
+import SplashScreen from "@/components/SplashScreen";
 import { useShareCard } from "@/hooks/useShareCard";
 
 type FilterType = "all" | CompanyCategory;
@@ -37,6 +38,12 @@ const Index = () => {
   const [deepDiveCompany, setDeepDiveCompany] = useState<CompanyData | null>(null);
   const [detailCompany, setDetailCompany] = useState<CompanyData | null>(null);
   const [bookmarkedIds, setBookmarkedIds] = useState<Set<string>>(new Set());
+  const [showSplash, setShowSplash] = useState(true);
+
+  useEffect(() => {
+    const t = setTimeout(() => setShowSplash(false), 2200);
+    return () => clearTimeout(t);
+  }, []);
 
   const { useMockData, toggleMockData } = useSettings();
   const { ref: shareRef, pendingCompany: sharePending, share: shareCompany } = useShareCard();
@@ -134,6 +141,7 @@ const Index = () => {
 
   return (
     <div className="relative min-h-screen bg-background overflow-hidden">
+      <AnimatePresence>{showSplash && <SplashScreen />}</AnimatePresence>
       {/* Top bar */}
       <motion.header
         initial={{ opacity: 0, y: -20 }}
