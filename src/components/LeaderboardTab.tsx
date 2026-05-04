@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Trophy, TrendingUp } from "lucide-react";
-import { useLeaderboard, type LeaderboardRegion, type LeaderboardEntry } from "@/hooks/useLeaderboard";
+import { useLeaderboard, type LeaderboardRegion, type LeaderboardMode, type LeaderboardEntry } from "@/hooks/useLeaderboard";
 import CompanyLogo from "@/components/CompanyLogo";
 import type { CompanyData } from "@/data/mockFinancials";
 
@@ -15,18 +15,27 @@ const regions: { label: string; value: LeaderboardRegion }[] = [
   { label: "🇺🇸 US", value: "us" },
 ];
 
+const modes: { label: string; value: LeaderboardMode }[] = [
+  { label: "Beat", value: "beat" },
+  { label: "YoY", value: "yoy" },
+  { label: "Revenue", value: "revenue" },
+  { label: "Profit", value: "profit" },
+  { label: "EPS", value: "eps" },
+];
+
 const rankStyles = [
-  "bg-gradient-to-br from-yellow-400 to-amber-600 text-black", // 1
-  "bg-gradient-to-br from-slate-300 to-slate-500 text-black",  // 2
-  "bg-gradient-to-br from-amber-700 to-amber-900 text-white",  // 3
+  "bg-gradient-to-br from-yellow-400 to-amber-600 text-black",
+  "bg-gradient-to-br from-slate-300 to-slate-500 text-black",
+  "bg-gradient-to-br from-amber-700 to-amber-900 text-white",
   "bg-secondary text-muted-foreground",
   "bg-secondary text-muted-foreground",
 ];
 
-function shortGrowth(g: string): string {
-  if (!g) return "—";
-  const m = g.match(/[+-]?\d+(?:\.\d+)?\s*%/);
-  return m ? m[0].replace(/\s+/g, "") : g.split(/[\s(]/)[0] || "—";
+function shortVal(v: string): string {
+  if (!v) return "—";
+  const m = v.match(/[+-]?\d+(?:\.\d+)?\s*%/);
+  if (m) return m[0].replace(/\s+/g, "");
+  return v.split(/[\s(]/)[0] || "—";
 }
 
 function entryToCompany(e: LeaderboardEntry): CompanyData {
@@ -47,13 +56,30 @@ function entryToCompany(e: LeaderboardEntry): CompanyData {
   } as CompanyData;
 }
 
+function displayFor(e: LeaderboardEntry, mode: LeaderboardMode): { primary: string; secondary: string } {
+  switch (mode) {
+    case "revenue": return { primary: shortVal(e.revenue), secondary: e.growth ? shortVal(e.growth) : "" };
+    case "profit": return { primary: shortVal(e.profit), secondary: e.growth ? shortVal(e.growth) : "" };
+    case "eps": return { primary: shortVal(e.eps), secondary: e.growth ? shortVal(e.growth) : "" };
+    case "yoy": return { primary: shortVal(e.growth), secondary: shortVal(e.revenue) };
+    case "beat":
+    default: return { primary: shortVal(e.growth), secondary: shortVal(e.revenue) };
+  }
+}
+
 const LeaderboardTab = ({ onSelectCompany }: LeaderboardTabProps) => {
   const [region, setRegion] = useState<LeaderboardRegion>("all");
-  const { data: groups, isLoading } = useLeaderboard(region);
+  const [mode, setMode] = useState<LeaderboardMode>("beat");
+  const { data: groups, isLoading } = useLeaderboard(region, mode);
+
+  const cycleMode = (dir: 1 | -1) => {
+    const idx = modes.findIndex((m) => m.value === mode);
+    const next = (idx + dir + modes.length) % modes.length;
+    setMode(modes[next].value);
+  };
 
   return (
-    <div className="min-h-screen bg-background pt-[120px] pb-24 max-w-[375px] mx-auto">
-      {/* Beta badge + region pills (sit under the existing top header) */}
+    <div className="min-h-screen bg-background pt-[120px] pb-24 max-w-[375px] mx-auto overflow-x-hidden">
       <div className="px-5 mb-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Trophy className="w-4 h-4 text-primary" />
@@ -64,7 +90,8 @@ const LeaderboardTab = ({ onSelectCompany }: LeaderboardTabProps) => {
         </div>
       </div>
 
-      <div className="flex gap-2 px-5 mb-5 overflow-x-auto no-scrollbar">
+      {/* Region pills */}
+      <div className="flex gap-2 px-5 mb-3 overflow-x-auto no-scrollbar">
         {regions.map((r) => (
           <button
             key={r.value}
@@ -80,6 +107,24 @@ const LeaderboardTab = ({ onSelectCompany }: LeaderboardTabProps) => {
         ))}
       </div>
 
+      {/* Mode pills */}
+      <div className="flex gap-1.5 px-5 mb-2 overflow-x-auto no-scrollbar">
+        {modes.map((m) => (
+          <button
+            key={m.value}
+            onClick={() => setMode(m.value)}
+            className={`shrink-0 text-[11px] font-semibold px-2.5 py-1 rounded-full border transition-all ${
+              mode === m.value
+                ? "bg-primary/20 text-primary border-primary/60"
+                : "bg-transparent text-muted-foreground border-border/60 hover:border-primary/40"
+            }`}
+          >
+            {m.label}
+          </button>
+        ))}
+      </div>
+      <p className="px-5 mb-3 text-[10px] text-muted-foreground/70">Swipe ← → to switch ranking</p>
+
       {isLoading ? (
         <div className="px-5 space-y-3">
           {[1, 2, 3].map((i) => (
@@ -89,59 +134,75 @@ const LeaderboardTab = ({ onSelectCompany }: LeaderboardTabProps) => {
       ) : !groups || groups.length === 0 ? (
         <div className="px-5 py-16 text-center">
           <Trophy className="w-10 h-10 mx-auto text-muted-foreground/40 mb-3" />
-          <p className="text-sm text-muted-foreground">No 'Beat' winners yet for this region.</p>
+          <p className="text-sm text-muted-foreground">No winners yet for this filter.</p>
         </div>
       ) : (
-        <div className="px-5 space-y-6">
-          {groups.map((group, gi) => (
-            <motion.section
-              key={group.quarter}
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: gi * 0.05 }}
-            >
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-bold font-['Space_Grotesk'] text-foreground">
-                  {group.quarter}
-                </h3>
-                <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                  Top {group.entries.length} • Beat
-                </span>
-              </div>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={mode}
+            drag="x"
+            dragConstraints={{ left: 0, right: 0 }}
+            dragElastic={0.25}
+            onDragEnd={(_, info) => {
+              if (info.offset.x < -60) cycleMode(1);
+              else if (info.offset.x > 60) cycleMode(-1);
+            }}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.2 }}
+            className="px-5 space-y-6 touch-pan-y"
+          >
+            {groups.map((group, gi) => (
+              <section key={group.quarter}>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-bold font-['Space_Grotesk'] text-foreground">
+                    {group.quarter}
+                  </h3>
+                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                    Top {group.entries.length} • {modes.find((m) => m.value === mode)?.label}
+                  </span>
+                </div>
 
-              <div className="space-y-2">
-                {group.entries.map((e, idx) => (
-                  <button
-                    key={e.id}
-                    onClick={() => onSelectCompany?.(entryToCompany(e))}
-                    className="w-full text-left rounded-xl border border-border bg-card hover:border-primary/40 transition-colors p-3 flex items-center gap-3"
-                  >
-                    <div
-                      className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${rankStyles[idx]}`}
-                    >
-                      {idx + 1}
-                    </div>
-                    <CompanyLogo domain={e.domain} name={e.name} ticker={e.ticker} size="sm" />
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <p className="text-sm font-semibold text-foreground truncate">{e.name}</p>
-                        <span className="text-[10px] text-muted-foreground">{e.ticker}</span>
-                      </div>
-                      <p className="text-xs text-muted-foreground truncate">{e.headline}</p>
-                    </div>
-                    <div className="text-right shrink-0 max-w-[80px]">
-                      <div className="flex items-center justify-end gap-1 text-primary text-sm font-bold">
-                        <TrendingUp className="w-3 h-3 shrink-0" />
-                        <span className="truncate">{shortGrowth(e.growth)}</span>
-                      </div>
-                      <p className="text-[10px] text-muted-foreground mt-0.5 truncate">{e.revenue}</p>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </motion.section>
-          ))}
-        </div>
+                <div className="space-y-2">
+                  {group.entries.map((e, idx) => {
+                    const { primary, secondary } = displayFor(e, mode);
+                    return (
+                      <button
+                        key={e.id}
+                        onClick={() => onSelectCompany?.(entryToCompany(e))}
+                        className="w-full text-left rounded-xl border border-border bg-card hover:border-primary/40 transition-colors p-3 flex items-center gap-3"
+                      >
+                        <div
+                          className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${rankStyles[idx]}`}
+                        >
+                          {idx + 1}
+                        </div>
+                        <CompanyLogo domain={e.domain} name={e.name} ticker={e.ticker} size="sm" />
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm font-semibold text-foreground truncate">{e.name}</p>
+                            <span className="text-[10px] text-muted-foreground shrink-0">{e.ticker}</span>
+                          </div>
+                          <p className="text-xs text-muted-foreground truncate">{e.headline}</p>
+                        </div>
+                        <div className="text-right shrink-0 max-w-[80px]">
+                          <div className="flex items-center justify-end gap-1 text-primary text-sm font-bold">
+                            <TrendingUp className="w-3 h-3 shrink-0" />
+                            <span className="truncate">{primary}</span>
+                          </div>
+                          {secondary && (
+                            <p className="text-[10px] text-muted-foreground mt-0.5 truncate">{secondary}</p>
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </section>
+            ))}
+          </motion.div>
+        </AnimatePresence>
       )}
     </div>
   );
