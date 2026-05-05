@@ -10,14 +10,34 @@ interface FinanceCardProps {
   onSwipeLeft?: () => void;
   onBookmark?: () => void;
   onShare?: () => void;
+  onLongPress?: () => void;
   isBookmarked?: boolean;
+  isCompareSelected?: boolean;
 }
 
-const FinanceCard = ({ company, onReadReport, onSwipeLeft, onBookmark, onShare, isBookmarked = false }: FinanceCardProps) => {
+const FinanceCard = ({ company, onReadReport, onSwipeLeft, onBookmark, onShare, onLongPress, isBookmarked = false, isCompareSelected = false }: FinanceCardProps) => {
   const isPositive = company.changePercent >= 0;
   const [showBookmarkAnim, setShowBookmarkAnim] = useState(false);
   const x = useMotionValue(0);
   const cardRef = useRef<HTMLDivElement>(null);
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const longPressFired = useRef(false);
+
+  const startLongPress = () => {
+    longPressFired.current = false;
+    if (longPressTimer.current) clearTimeout(longPressTimer.current);
+    longPressTimer.current = setTimeout(() => {
+      longPressFired.current = true;
+      onLongPress?.();
+      if (navigator.vibrate) navigator.vibrate(30);
+    }, 500);
+  };
+  const cancelLongPress = () => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  };
 
   // Visual feedback during drag
   const leftIndicatorOpacity = useTransform(x, [-120, -60, 0], [1, 0.5, 0]);
