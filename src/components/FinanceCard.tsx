@@ -83,6 +83,7 @@ const FinanceCard = ({ company, onReadReport, onSwipeLeft, onBookmark, onShare, 
         dragConstraints={{ left: 0, right: 0 }}
         dragElastic={0.4}
         onDragEnd={handleDragEnd}
+        onDoubleClick={() => onReadReport?.()}
         style={{ x, rotate }}
         initial={{ opacity: 0, y: 40 }}
         whileInView={{ opacity: 1, y: 0 }}
