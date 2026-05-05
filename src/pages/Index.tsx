@@ -112,9 +112,14 @@ const Index = () => {
   const containerRef = useRef<HTMLDivElement>(null);
 
   const filteredCompanies = useMemo(() => {
-    if (activeFilter === "all") return companies;
-    return companies.filter((c) => c.categories.includes(activeFilter));
-  }, [activeFilter, companies]);
+    let list = companies;
+    if (activeFilter !== "all") list = list.filter((c) => c.categories.includes(activeFilter));
+    if (advRegion !== "all") list = list.filter((c) => c.categories.includes(advRegion));
+    if (advSector !== "all") list = list.filter((c) => c.categories.includes(advSector));
+    if (advPeriod === "quarterly") list = list.filter((c) => /Q[1-4]/i.test(c.quarter));
+    if (advPeriod === "annual") list = list.filter((c) => /(FY|Annual)/i.test(c.quarter) && !/Q[1-4]/i.test(c.quarter));
+    return list;
+  }, [activeFilter, companies, advRegion, advSector, advPeriod]);
 
   const bookmarkedCompanies = useMemo(
     () => companies.filter((c) => bookmarkedIds.has(c.id)),
