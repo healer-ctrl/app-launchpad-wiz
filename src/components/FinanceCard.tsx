@@ -10,14 +10,34 @@ interface FinanceCardProps {
   onSwipeLeft?: () => void;
   onBookmark?: () => void;
   onShare?: () => void;
+  onLongPress?: () => void;
   isBookmarked?: boolean;
+  isCompareSelected?: boolean;
 }
 
-const FinanceCard = ({ company, onReadReport, onSwipeLeft, onBookmark, onShare, isBookmarked = false }: FinanceCardProps) => {
+const FinanceCard = ({ company, onReadReport, onSwipeLeft, onBookmark, onShare, onLongPress, isBookmarked = false, isCompareSelected = false }: FinanceCardProps) => {
   const isPositive = company.changePercent >= 0;
   const [showBookmarkAnim, setShowBookmarkAnim] = useState(false);
   const x = useMotionValue(0);
   const cardRef = useRef<HTMLDivElement>(null);
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const longPressFired = useRef(false);
+
+  const startLongPress = () => {
+    longPressFired.current = false;
+    if (longPressTimer.current) clearTimeout(longPressTimer.current);
+    longPressTimer.current = setTimeout(() => {
+      longPressFired.current = true;
+      onLongPress?.();
+      if (navigator.vibrate) navigator.vibrate(30);
+    }, 500);
+  };
+  const cancelLongPress = () => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  };
 
   // Visual feedback during drag
   const leftIndicatorOpacity = useTransform(x, [-120, -60, 0], [1, 0.5, 0]);
@@ -82,14 +102,22 @@ const FinanceCard = ({ company, onReadReport, onSwipeLeft, onBookmark, onShare, 
         drag="x"
         dragConstraints={{ left: 0, right: 0 }}
         dragElastic={0.4}
+        onDragStart={cancelLongPress}
         onDragEnd={handleDragEnd}
         onDoubleClick={() => onReadReport?.()}
+        onPointerDown={startLongPress}
+        onPointerUp={cancelLongPress}
+        onPointerLeave={cancelLongPress}
+        onPointerCancel={cancelLongPress}
+        onContextMenu={(e) => e.preventDefault()}
         style={{ x, rotate }}
         initial={{ opacity: 0, y: 40 }}
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
         viewport={{ once: true, amount: 0.5 }}
-        className="w-full max-w-[375px] flex flex-col gap-5 touch-pan-y"
+        className={`w-full max-w-[375px] flex flex-col gap-5 touch-pan-y rounded-2xl transition-shadow ${
+          isCompareSelected ? "ring-2 ring-primary shadow-[0_0_24px_hsl(var(--primary)/0.4)] p-4 -m-4" : ""
+        }`}
       >
         {/* Top pill — quarter */}
         <motion.div

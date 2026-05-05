@@ -18,6 +18,7 @@ import LeaderboardTab from "@/components/LeaderboardTab";
 import Settings from "@/pages/Settings";
 import ShareableCard from "@/components/ShareableCard";
 import SplashScreen from "@/components/SplashScreen";
+import CompareSheet from "@/components/CompareSheet";
 import { useShareCard } from "@/hooks/useShareCard";
 
 type FilterType = "all" | CompanyCategory;
@@ -75,6 +76,9 @@ const Index = () => {
   const [advSector, setAdvSector] = useState<"all" | "tech" | "banking">("all");
   const [advPeriod, setAdvPeriod] = useState<"all" | "quarterly" | "annual">("all");
   const [filterOpen, setFilterOpen] = useState(false);
+  const [compareIds, setCompareIds] = useState<string[]>([]);
+  const [showCompare, setShowCompare] = useState(false);
+  const [compareToast, setCompareToast] = useState<string | null>(null);
 
   useEffect(() => {
     const t = setTimeout(() => setShowSplash(false), 2200);
@@ -179,6 +183,28 @@ const Index = () => {
     setActiveIndex(0);
     if (containerRef.current) containerRef.current.scrollTop = 0;
   };
+
+  const handleLongPress = useCallback((id: string) => {
+    setCompareIds((prev) => {
+      if (prev.includes(id)) {
+        const next = prev.filter((x) => x !== id);
+        setCompareToast("Removed from compare");
+        setTimeout(() => setCompareToast(null), 1500);
+        return next;
+      }
+      const next = [...prev, id].slice(-2);
+      if (next.length === 1) {
+        setCompareToast("Long-press another card to compare");
+        setTimeout(() => setCompareToast(null), 2200);
+      } else if (next.length === 2) {
+        setShowCompare(true);
+      }
+      return next;
+    });
+  }, []);
+
+  const compareA = companies.find((c) => c.id === compareIds[0]);
+  const compareB = companies.find((c) => c.id === compareIds[1]);
 
   return (
     <div className="relative min-h-screen bg-background overflow-hidden">
@@ -321,7 +347,9 @@ const Index = () => {
                   onSwipeLeft={() => openDeepDive(company)}
                   onBookmark={() => toggleBookmark(company.id)}
                   onShare={() => shareCompany(company)}
+                  onLongPress={() => handleLongPress(company.id)}
                   isBookmarked={bookmarkedIds.has(company.id)}
+                  isCompareSelected={compareIds.includes(company.id)}
                 />
               ))}
             </div>
@@ -381,6 +409,32 @@ const Index = () => {
 
       <AnimatePresence>
         {showSettings && <Settings onBack={() => setShowSettings(false)} />}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showCompare && compareA && compareB && (
+          <CompareSheet
+            a={compareA}
+            b={compareB}
+            onClose={() => {
+              setShowCompare(false);
+              setCompareIds([]);
+            }}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {compareToast && (
+          <motion.div
+            initial={{ y: 60, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 60, opacity: 0 }}
+            className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[55] px-4 py-2 rounded-full bg-primary text-primary-foreground text-xs font-semibold shadow-lg"
+          >
+            {compareToast}
+          </motion.div>
+        )}
       </AnimatePresence>
 
       {/* Off-screen snapshot target for share-as-image */}
