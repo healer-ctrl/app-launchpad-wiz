@@ -411,6 +411,32 @@ const Index = () => {
         {showSettings && <Settings onBack={() => setShowSettings(false)} />}
       </AnimatePresence>
 
+      <AnimatePresence>
+        {showCompare && compareA && compareB && (
+          <CompareSheet
+            a={compareA}
+            b={compareB}
+            onClose={() => {
+              setShowCompare(false);
+              setCompareIds([]);
+            }}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {compareToast && (
+          <motion.div
+            initial={{ y: 60, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 60, opacity: 0 }}
+            className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[55] px-4 py-2 rounded-full bg-primary text-primary-foreground text-xs font-semibold shadow-lg"
+          >
+            {compareToast}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Off-screen snapshot target for share-as-image */}
       <div
         aria-hidden
