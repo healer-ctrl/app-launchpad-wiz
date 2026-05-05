@@ -184,6 +184,28 @@ const Index = () => {
     if (containerRef.current) containerRef.current.scrollTop = 0;
   };
 
+  const handleLongPress = useCallback((id: string) => {
+    setCompareIds((prev) => {
+      if (prev.includes(id)) {
+        const next = prev.filter((x) => x !== id);
+        setCompareToast("Removed from compare");
+        setTimeout(() => setCompareToast(null), 1500);
+        return next;
+      }
+      const next = [...prev, id].slice(-2);
+      if (next.length === 1) {
+        setCompareToast("Long-press another card to compare");
+        setTimeout(() => setCompareToast(null), 2200);
+      } else if (next.length === 2) {
+        setShowCompare(true);
+      }
+      return next;
+    });
+  }, []);
+
+  const compareA = companies.find((c) => c.id === compareIds[0]);
+  const compareB = companies.find((c) => c.id === compareIds[1]);
+
   return (
     <div className="relative min-h-screen bg-background overflow-hidden">
       <AnimatePresence>{showSplash && <SplashScreen />}</AnimatePresence>
