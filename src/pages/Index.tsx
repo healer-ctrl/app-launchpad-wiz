@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useMemo, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Settings as SettingsIcon } from "lucide-react";
+import { Settings as SettingsIcon, SlidersHorizontal, Check } from "lucide-react";
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { type CompanyData, type CompanyCategory } from "@/data/mockFinancials";
 import { useFeedData, type FeedCompany } from "@/hooks/useFeedData";
 import { useSettings } from "@/hooks/useSettings";
@@ -29,6 +30,37 @@ const filters: { label: string; value: FilterType }[] = [
   { label: "🏦 Banking", value: "banking" },
 ];
 
+const FilterGroup = ({
+  label,
+  value,
+  onChange,
+  options,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  options: { v: string; l: string }[];
+}) => (
+  <div className="mb-3">
+    <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1.5">{label}</p>
+    <div className="flex flex-wrap gap-1.5">
+      {options.map((o) => (
+        <button
+          key={o.v}
+          onClick={() => onChange(o.v)}
+          className={`text-xs px-2.5 py-1 rounded-full border transition-all ${
+            value === o.v
+              ? "bg-primary text-primary-foreground border-primary"
+              : "bg-secondary/40 text-muted-foreground border-border hover:border-primary/40"
+          }`}
+        >
+          {o.l}
+        </button>
+      ))}
+    </div>
+  </div>
+);
+
 const Index = () => {
   const [activeTab, setActiveTab] = useState<TabType>("feed");
   const [showSettings, setShowSettings] = useState(false);
@@ -39,6 +71,10 @@ const Index = () => {
   const [detailCompany, setDetailCompany] = useState<CompanyData | null>(null);
   const [bookmarkedIds, setBookmarkedIds] = useState<Set<string>>(new Set());
   const [showSplash, setShowSplash] = useState(true);
+  const [advRegion, setAdvRegion] = useState<"all" | "india" | "us">("all");
+  const [advSector, setAdvSector] = useState<"all" | "tech" | "banking">("all");
+  const [advPeriod, setAdvPeriod] = useState<"all" | "quarterly" | "annual">("all");
+  const [filterOpen, setFilterOpen] = useState(false);
 
   useEffect(() => {
     const t = setTimeout(() => setShowSplash(false), 2200);
@@ -107,9 +143,14 @@ const Index = () => {
   const containerRef = useRef<HTMLDivElement>(null);
 
   const filteredCompanies = useMemo(() => {
-    if (activeFilter === "all") return companies;
-    return companies.filter((c) => c.categories.includes(activeFilter));
-  }, [activeFilter, companies]);
+    let list = companies;
+    if (activeFilter !== "all") list = list.filter((c) => c.categories.includes(activeFilter));
+    if (advRegion !== "all") list = list.filter((c) => c.categories.includes(advRegion));
+    if (advSector !== "all") list = list.filter((c) => c.categories.includes(advSector));
+    if (advPeriod === "quarterly") list = list.filter((c) => /Q[1-4]/i.test(c.quarter));
+    if (advPeriod === "annual") list = list.filter((c) => /(FY|Annual)/i.test(c.quarter) && !/Q[1-4]/i.test(c.quarter));
+    return list;
+  }, [activeFilter, companies, advRegion, advSector, advPeriod]);
 
   const bookmarkedCompanies = useMemo(
     () => companies.filter((c) => bookmarkedIds.has(c.id)),
@@ -161,6 +202,65 @@ const Index = () => {
             <button onClick={() => setShowSettings(true)} className="text-muted-foreground hover:text-foreground transition-colors">
               <SettingsIcon className="w-4.5 h-4.5" />
             </button>
+            {activeTab === "feed" && (
+              <Popover open={filterOpen} onOpenChange={setFilterOpen}>
+                <PopoverTrigger asChild>
+                  <button
+                    aria-label="Filters"
+                    className={`relative text-muted-foreground hover:text-foreground transition-colors ${
+                      advRegion !== "all" || advSector !== "all" || advPeriod !== "all" ? "text-primary" : ""
+                    }`}
+                  >
+                    <SlidersHorizontal className="w-4 h-4" />
+                    {(advRegion !== "all" || advSector !== "all" || advPeriod !== "all") && (
+                      <span className="absolute -top-1 -right-1 w-1.5 h-1.5 rounded-full bg-primary" />
+                    )}
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent align="end" sideOffset={8} className="w-64 p-3 bg-background/95 backdrop-blur-xl border-border">
+                  <FilterGroup
+                    label="Region"
+                    value={advRegion}
+                    onChange={(v) => setAdvRegion(v as any)}
+                    options={[
+                      { v: "all", l: "All" },
+                      { v: "india", l: "🇮🇳 India" },
+                      { v: "us", l: "🇺🇸 US" },
+                    ]}
+                  />
+                  <FilterGroup
+                    label="Sector"
+                    value={advSector}
+                    onChange={(v) => setAdvSector(v as any)}
+                    options={[
+                      { v: "all", l: "All" },
+                      { v: "tech", l: "💻 Tech" },
+                      { v: "banking", l: "🏦 Banking" },
+                    ]}
+                  />
+                  <FilterGroup
+                    label="Period"
+                    value={advPeriod}
+                    onChange={(v) => setAdvPeriod(v as any)}
+                    options={[
+                      { v: "all", l: "All" },
+                      { v: "quarterly", l: "Quarterly" },
+                      { v: "annual", l: "Annual" },
+                    ]}
+                  />
+                  <button
+                    onClick={() => {
+                      setAdvRegion("all");
+                      setAdvSector("all");
+                      setAdvPeriod("all");
+                    }}
+                    className="w-full mt-1 text-xs text-muted-foreground hover:text-foreground py-1.5 rounded-md border border-border/50"
+                  >
+                    Reset
+                  </button>
+                </PopoverContent>
+              </Popover>
+            )}
           </div>
         </div>
 
