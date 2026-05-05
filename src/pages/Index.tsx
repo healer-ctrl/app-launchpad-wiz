@@ -18,6 +18,7 @@ import LeaderboardTab from "@/components/LeaderboardTab";
 import Settings from "@/pages/Settings";
 import ShareableCard from "@/components/ShareableCard";
 import SplashScreen from "@/components/SplashScreen";
+import CompareSheet from "@/components/CompareSheet";
 import { useShareCard } from "@/hooks/useShareCard";
 
 type FilterType = "all" | CompanyCategory;
