@@ -290,6 +290,23 @@ const Index = () => {
             <FeedSkeleton />
           ) : filteredCompanies.length === 0 && !useMockData ? (
             <FeedEmptyState onSwitchToMock={() => toggleMockData(true)} />
+          ) : filteredCompanies.length === 0 ? (
+            <div className="h-screen flex flex-col items-center justify-center px-8 text-center">
+              <motion.div
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ type: "spring", stiffness: 200, damping: 15 }}
+                className="text-6xl mb-4"
+              >
+                🎉
+              </motion.div>
+              <h2 className="text-xl font-bold font-['Space_Grotesk'] text-foreground mb-2">
+                You're all caught up!
+              </h2>
+              <p className="text-sm text-muted-foreground max-w-[260px] leading-relaxed">
+                No more reports matching these filters. Touch grass, hydrate, or tweak your filters. 📈
+              </p>
+            </div>
           ) : (
             <div
               ref={containerRef}
