@@ -171,6 +171,65 @@ const Index = () => {
             <button onClick={() => setShowSettings(true)} className="text-muted-foreground hover:text-foreground transition-colors">
               <SettingsIcon className="w-4.5 h-4.5" />
             </button>
+            {activeTab === "feed" && (
+              <Popover open={filterOpen} onOpenChange={setFilterOpen}>
+                <PopoverTrigger asChild>
+                  <button
+                    aria-label="Filters"
+                    className={`relative text-muted-foreground hover:text-foreground transition-colors ${
+                      advRegion !== "all" || advSector !== "all" || advPeriod !== "all" ? "text-primary" : ""
+                    }`}
+                  >
+                    <SlidersHorizontal className="w-4 h-4" />
+                    {(advRegion !== "all" || advSector !== "all" || advPeriod !== "all") && (
+                      <span className="absolute -top-1 -right-1 w-1.5 h-1.5 rounded-full bg-primary" />
+                    )}
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent align="end" sideOffset={8} className="w-64 p-3 bg-background/95 backdrop-blur-xl border-border">
+                  <FilterGroup
+                    label="Region"
+                    value={advRegion}
+                    onChange={(v) => setAdvRegion(v as any)}
+                    options={[
+                      { v: "all", l: "All" },
+                      { v: "india", l: "🇮🇳 India" },
+                      { v: "us", l: "🇺🇸 US" },
+                    ]}
+                  />
+                  <FilterGroup
+                    label="Sector"
+                    value={advSector}
+                    onChange={(v) => setAdvSector(v as any)}
+                    options={[
+                      { v: "all", l: "All" },
+                      { v: "tech", l: "💻 Tech" },
+                      { v: "banking", l: "🏦 Banking" },
+                    ]}
+                  />
+                  <FilterGroup
+                    label="Period"
+                    value={advPeriod}
+                    onChange={(v) => setAdvPeriod(v as any)}
+                    options={[
+                      { v: "all", l: "All" },
+                      { v: "quarterly", l: "Quarterly" },
+                      { v: "annual", l: "Annual" },
+                    ]}
+                  />
+                  <button
+                    onClick={() => {
+                      setAdvRegion("all");
+                      setAdvSector("all");
+                      setAdvPeriod("all");
+                    }}
+                    className="w-full mt-1 text-xs text-muted-foreground hover:text-foreground py-1.5 rounded-md border border-border/50"
+                  >
+                    Reset
+                  </button>
+                </PopoverContent>
+              </Popover>
+            )}
           </div>
         </div>
 
