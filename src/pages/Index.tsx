@@ -347,7 +347,9 @@ const Index = () => {
                   onSwipeLeft={() => openDeepDive(company)}
                   onBookmark={() => toggleBookmark(company.id)}
                   onShare={() => shareCompany(company)}
+                  onLongPress={() => handleLongPress(company.id)}
                   isBookmarked={bookmarkedIds.has(company.id)}
+                  isCompareSelected={compareIds.includes(company.id)}
                 />
               ))}
             </div>
