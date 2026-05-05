@@ -102,14 +102,22 @@ const FinanceCard = ({ company, onReadReport, onSwipeLeft, onBookmark, onShare, 
         drag="x"
         dragConstraints={{ left: 0, right: 0 }}
         dragElastic={0.4}
+        onDragStart={cancelLongPress}
         onDragEnd={handleDragEnd}
         onDoubleClick={() => onReadReport?.()}
+        onPointerDown={startLongPress}
+        onPointerUp={cancelLongPress}
+        onPointerLeave={cancelLongPress}
+        onPointerCancel={cancelLongPress}
+        onContextMenu={(e) => e.preventDefault()}
         style={{ x, rotate }}
         initial={{ opacity: 0, y: 40 }}
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
         viewport={{ once: true, amount: 0.5 }}
-        className="w-full max-w-[375px] flex flex-col gap-5 touch-pan-y"
+        className={`w-full max-w-[375px] flex flex-col gap-5 touch-pan-y rounded-2xl transition-shadow ${
+          isCompareSelected ? "ring-2 ring-primary shadow-[0_0_24px_hsl(var(--primary)/0.4)] p-4 -m-4" : ""
+        }`}
       >
         {/* Top pill — quarter */}
         <motion.div
