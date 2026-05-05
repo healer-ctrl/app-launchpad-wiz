@@ -30,6 +30,37 @@ const filters: { label: string; value: FilterType }[] = [
   { label: "🏦 Banking", value: "banking" },
 ];
 
+const FilterGroup = ({
+  label,
+  value,
+  onChange,
+  options,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  options: { v: string; l: string }[];
+}) => (
+  <div className="mb-3">
+    <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1.5">{label}</p>
+    <div className="flex flex-wrap gap-1.5">
+      {options.map((o) => (
+        <button
+          key={o.v}
+          onClick={() => onChange(o.v)}
+          className={`text-xs px-2.5 py-1 rounded-full border transition-all ${
+            value === o.v
+              ? "bg-primary text-primary-foreground border-primary"
+              : "bg-secondary/40 text-muted-foreground border-border hover:border-primary/40"
+          }`}
+        >
+          {o.l}
+        </button>
+      ))}
+    </div>
+  </div>
+);
+
 const Index = () => {
   const [activeTab, setActiveTab] = useState<TabType>("feed");
   const [showSettings, setShowSettings] = useState(false);
