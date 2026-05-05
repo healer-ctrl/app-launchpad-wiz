@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useMemo, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Settings as SettingsIcon } from "lucide-react";
+import { Settings as SettingsIcon, SlidersHorizontal, Check } from "lucide-react";
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { type CompanyData, type CompanyCategory } from "@/data/mockFinancials";
 import { useFeedData, type FeedCompany } from "@/hooks/useFeedData";
 import { useSettings } from "@/hooks/useSettings";
