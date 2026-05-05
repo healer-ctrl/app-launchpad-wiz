@@ -40,6 +40,10 @@ const Index = () => {
   const [detailCompany, setDetailCompany] = useState<CompanyData | null>(null);
   const [bookmarkedIds, setBookmarkedIds] = useState<Set<string>>(new Set());
   const [showSplash, setShowSplash] = useState(true);
+  const [advRegion, setAdvRegion] = useState<"all" | "india" | "us">("all");
+  const [advSector, setAdvSector] = useState<"all" | "tech" | "banking">("all");
+  const [advPeriod, setAdvPeriod] = useState<"all" | "quarterly" | "annual">("all");
+  const [filterOpen, setFilterOpen] = useState(false);
 
   useEffect(() => {
     const t = setTimeout(() => setShowSplash(false), 2200);
