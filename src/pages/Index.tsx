@@ -76,6 +76,9 @@ const Index = () => {
   const [advSector, setAdvSector] = useState<"all" | "tech" | "banking">("all");
   const [advPeriod, setAdvPeriod] = useState<"all" | "quarterly" | "annual">("all");
   const [filterOpen, setFilterOpen] = useState(false);
+  const [compareIds, setCompareIds] = useState<string[]>([]);
+  const [showCompare, setShowCompare] = useState(false);
+  const [compareToast, setCompareToast] = useState<string | null>(null);
 
   useEffect(() => {
     const t = setTimeout(() => setShowSplash(false), 2200);
