@@ -125,8 +125,8 @@ const FinanceCard = ({ company, onReadReport, onSwipeLeft, onBookmark, onShare, 
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
         viewport={{ once: true, amount: 0.5 }}
-        className={`w-full max-w-[375px] flex flex-col gap-3 touch-pan-y rounded-2xl transition-shadow ${
-          isCompareSelected ? "ring-2 ring-primary shadow-[0_0_24px_hsl(var(--primary)/0.4)] p-4 -m-4" : ""
+        className={`w-full max-w-[375px] flex flex-col gap-3.5 touch-pan-y rounded-2xl transition-shadow p-4 ${
+          isCompareSelected ? "ring-2 ring-primary shadow-[0_0_24px_hsl(var(--primary)/0.4)] -m-4" : ""
         }`}
       >
         {/* Top pill — quarter */}
