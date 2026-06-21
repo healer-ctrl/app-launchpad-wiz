@@ -163,7 +163,7 @@ const FinanceCard = ({ company, onReadReport, onSwipeLeft, onBookmark, onShare, 
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-1.5 overflow-x-auto no-scrollbar -mx-1 px-1">
+        <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
           {TABS.map((t) => (
             <button
               key={t.key}
