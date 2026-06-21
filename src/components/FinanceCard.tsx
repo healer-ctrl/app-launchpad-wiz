@@ -15,9 +15,19 @@ interface FinanceCardProps {
   isCompareSelected?: boolean;
 }
 
+type TabKey = "fin" | "ca" | "shareholding" | "news" | "research";
+const TABS: { key: TabKey; label: string }[] = [
+  { key: "fin", label: "FIN" },
+  { key: "ca", label: "CA" },
+  { key: "shareholding", label: "Holdings" },
+  { key: "news", label: "News" },
+  { key: "research", label: "Research" },
+];
+
 const FinanceCard = ({ company, onReadReport, onSwipeLeft, onBookmark, onShare, onLongPress, isBookmarked = false, isCompareSelected = false }: FinanceCardProps) => {
   const isPositive = company.changePercent >= 0;
   const [showBookmarkAnim, setShowBookmarkAnim] = useState(false);
+  const [activeTab, setActiveTab] = useState<TabKey>("fin");
   const x = useMotionValue(0);
   const cardRef = useRef<HTMLDivElement>(null);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
