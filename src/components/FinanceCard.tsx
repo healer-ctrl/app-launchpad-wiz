@@ -68,7 +68,7 @@ const FinanceCard = ({ company, onReadReport, onSwipeLeft, onBookmark, onShare, 
   };
 
   return (
-    <div className="h-screen w-full snap-start flex items-center justify-center px-5 py-8 relative overflow-hidden">
+    <div className="h-screen w-full snap-start flex items-start justify-center px-5 pt-10 pb-4 relative overflow-hidden">
       {/* Swipe indicators */}
       <motion.div
         style={{ opacity: leftIndicatorOpacity }}
@@ -125,7 +125,7 @@ const FinanceCard = ({ company, onReadReport, onSwipeLeft, onBookmark, onShare, 
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
         viewport={{ once: true, amount: 0.5 }}
-        className={`w-full max-w-[375px] flex flex-col gap-5 touch-pan-y rounded-2xl transition-shadow ${
+        className={`w-full max-w-[375px] flex flex-col gap-3 touch-pan-y rounded-2xl transition-shadow ${
           isCompareSelected ? "ring-2 ring-primary shadow-[0_0_24px_hsl(var(--primary)/0.4)] p-4 -m-4" : ""
         }`}
       >
