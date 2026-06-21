@@ -68,7 +68,7 @@ const FinanceCard = ({ company, onReadReport, onSwipeLeft, onBookmark, onShare, 
   };
 
   return (
-    <div className="h-screen w-full snap-start flex items-center justify-center px-5 py-8 relative overflow-hidden">
+    <div className="h-screen w-full snap-start flex items-start justify-center px-5 pt-10 pb-4 relative overflow-hidden">
       {/* Swipe indicators */}
       <motion.div
         style={{ opacity: leftIndicatorOpacity }}
