@@ -15,9 +15,19 @@ interface FinanceCardProps {
   isCompareSelected?: boolean;
 }
 
+type TabKey = "fin" | "ca" | "shareholding" | "news" | "research";
+const TABS: { key: TabKey; label: string }[] = [
+  { key: "fin", label: "FIN" },
+  { key: "ca", label: "CA" },
+  { key: "shareholding", label: "Holdings" },
+  { key: "news", label: "News" },
+  { key: "research", label: "Research" },
+];
+
 const FinanceCard = ({ company, onReadReport, onSwipeLeft, onBookmark, onShare, onLongPress, isBookmarked = false, isCompareSelected = false }: FinanceCardProps) => {
   const isPositive = company.changePercent >= 0;
   const [showBookmarkAnim, setShowBookmarkAnim] = useState(false);
+  const [activeTab, setActiveTab] = useState<TabKey>("fin");
   const x = useMotionValue(0);
   const cardRef = useRef<HTMLDivElement>(null);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -152,53 +162,77 @@ const FinanceCard = ({ company, onReadReport, onSwipeLeft, onBookmark, onShare, 
           </div>
         </div>
 
-        {/* Headline */}
-        <motion.h3
-          initial={{ opacity: 0, x: -20 }}
-          whileInView={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.2, duration: 0.4 }}
-          viewport={{ once: true }}
-          className="text-lg font-semibold font-['Space_Grotesk'] leading-snug text-foreground"
-        >
-          {company.headline}
-        </motion.h3>
-
-        {/* Summary */}
-        <motion.p
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          transition={{ delay: 0.3, duration: 0.5 }}
-          viewport={{ once: true }}
-          className="text-sm leading-relaxed text-muted-foreground"
-        >
-          {company.summary}
-        </motion.p>
-
-        {/* Stats grid */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.35, duration: 0.4 }}
-          viewport={{ once: true }}
-          className="grid grid-cols-3 gap-3"
-        >
-          {[
-            { label: "Revenue", value: company.revenue },
-            { label: "Profit", value: company.profit },
-            { label: "Growth", value: company.growth },
-          ].map((stat) => (
-            <div
-              key={stat.label}
-              className="rounded-xl bg-secondary/60 border border-border p-3 text-center"
+        {/* Tabs */}
+        <div className="flex gap-1.5 overflow-x-auto no-scrollbar -mx-1 px-1">
+          {TABS.map((t) => (
+            <button
+              key={t.key}
+              onClick={(e) => {
+                e.stopPropagation();
+                setActiveTab(t.key);
+              }}
+              className={`shrink-0 text-[11px] font-semibold px-3 py-1.5 rounded-full border transition-all ${
+                activeTab === t.key
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-secondary/60 text-muted-foreground border-border"
+              }`}
             >
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">
-                {stat.label}
-              </p>
-              <p className="text-sm font-bold font-['Space_Grotesk'] text-foreground">
-                {stat.value}
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Tab content */}
+        <motion.div
+          key={activeTab}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.25 }}
+          className="rounded-xl bg-secondary/40 border border-border p-4 min-h-[180px]"
+        >
+          {activeTab === "fin" && (
+            <div className="space-y-2">
+              <h3 className="text-sm font-bold font-['Space_Grotesk'] text-foreground leading-snug">
+                {company.headline}
+              </h3>
+              <ul className="text-xs text-muted-foreground space-y-1.5 mt-2">
+                <li>• Revenue: <span className="text-foreground font-semibold">{company.revenue}</span></li>
+                <li>• Profit: <span className="text-foreground font-semibold">{company.profit}</span></li>
+                <li>• Growth: <span className={`font-semibold ${isPositive ? "text-primary" : "text-destructive"}`}>{company.growth}</span></li>
+              </ul>
+            </div>
+          )}
+          {activeTab === "ca" && (
+            <ul className="text-xs text-muted-foreground space-y-1.5">
+              <li>• No recent corporate actions</li>
+              <li>• Dividend & split history coming soon</li>
+            </ul>
+          )}
+          {activeTab === "shareholding" && (
+            <ul className="text-xs text-muted-foreground space-y-1.5">
+              <li>• Promoters: <span className="text-foreground font-semibold">—</span></li>
+              <li>• FII: <span className="text-foreground font-semibold">—</span></li>
+              <li>• DII: <span className="text-foreground font-semibold">—</span></li>
+              <li>• Public: <span className="text-foreground font-semibold">—</span></li>
+            </ul>
+          )}
+          {activeTab === "news" && (
+            <div className="space-y-2">
+              <h4 className="text-sm font-bold font-['Space_Grotesk'] text-foreground leading-snug">
+                {company.headline}
+              </h4>
+              <p className="text-xs text-muted-foreground leading-relaxed line-clamp-3">
+                {company.summary}
               </p>
             </div>
-          ))}
+          )}
+          {activeTab === "research" && (
+            <ul className="text-xs text-muted-foreground space-y-1.5">
+              <li>• FIN view: {isPositive ? "Constructive — momentum intact" : "Cautious — watch for reversal"}</li>
+              <li>• Key driver: {company.growth} growth</li>
+              <li>• Risk: macro & sector rotation</li>
+            </ul>
+          )}
         </motion.div>
 
         {/* Read Full Report link */}
