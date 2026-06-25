@@ -388,25 +388,28 @@ const CompanyDeepDive = ({ company, onBack }: CompanyDeepDiveProps) => {
                   <p className="text-[10px] text-muted-foreground text-center mt-4">AI-generated research · not investment advice</p>
                 </motion.section>
               )}
+            </motion.div>
+          </AnimatePresence>
+        )}
       </div>
 
       {/* Bottom Tabs */}
       {overview && (
         <div className="fixed bottom-0 inset-x-0 z-20 bg-background/90 backdrop-blur-xl border-t border-border/50">
-          <div className="max-w-[430px] mx-auto flex items-center justify-between px-2 py-2">
+          <div className="max-w-[430px] mx-auto flex items-center justify-between px-1.5 py-2 gap-1">
             {([
-              { id: "overview", label: "Overview" },
-              { id: "financials", label: "Financials" },
-              { id: "metrics", label: "Metrics" },
-              { id: "news", label: "News" },
               { id: "about", label: "About" },
+              { id: "news", label: "News" },
+              { id: "financial", label: "Financial" },
+              { id: "ca", label: "CA" },
+              { id: "research", label: "Research" },
             ] as const).map((t) => {
               const active = activeTab === t.id;
               return (
                 <button
                   key={t.id}
                   onClick={() => setActiveTab(t.id)}
-                  className={`flex-1 text-[11px] font-semibold py-2 px-1 rounded-lg transition-colors ${
+                  className={`flex-1 text-[10.5px] font-semibold py-2 px-1 rounded-lg transition-colors ${
                     active ? "text-primary-foreground bg-primary" : "text-muted-foreground"
                   }`}
                 >
