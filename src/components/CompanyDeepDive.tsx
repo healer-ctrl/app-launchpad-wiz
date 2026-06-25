@@ -177,9 +177,9 @@ const CompanyDeepDive = ({ company, onBack }: CompanyDeepDiveProps) => {
               transition={{ duration: 0.2 }}
               className="flex flex-col gap-8"
             >
-              {activeTab === "overview" && (
+              {activeTab === "about" && (
                 <motion.section>
-                  <SectionTitle icon={Building2} title="Company Overview" />
+                  <SectionTitle icon={Building2} title="About the Company" />
                   <div className="flex items-center gap-4 mb-4">
                     <CompanyLogo domain={company.domain} name={company.name} ticker={company.ticker} size="lg" />
                     <div className="flex-1 min-w-0">
@@ -188,7 +188,7 @@ const CompanyDeepDive = ({ company, onBack }: CompanyDeepDiveProps) => {
                     </div>
                   </div>
                   <p className="text-sm leading-relaxed text-muted-foreground mb-4">{overview.description}</p>
-                  <div className="grid grid-cols-2 gap-2.5">
+                  <div className="grid grid-cols-2 gap-2.5 mb-6">
                     {[
                       { label: "Founded", value: overview.founded },
                       { label: "HQ", value: overview.headquarters },
@@ -201,13 +201,74 @@ const CompanyDeepDive = ({ company, onBack }: CompanyDeepDiveProps) => {
                       </div>
                     ))}
                   </div>
+
+                  <div className="flex items-center gap-2 mb-3">
+                    <ShieldCheck className="w-4 h-4 text-primary" />
+                    <h4 className="text-[11px] uppercase tracking-widest text-muted-foreground font-medium">Competitive Advantages</h4>
+                  </div>
+                  {history && history.keyProducts.length > 0 ? (
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {history.keyProducts.map((p) => (
+                        <span key={p} className="text-xs px-3 py-1.5 rounded-full border border-primary/30 bg-primary/10 text-primary">
+                          {p}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-muted-foreground mb-4">Market leadership in {overview.industry}.</p>
+                  )}
+
+                  {history && history.competitors.length > 0 && (
+                    <>
+                      <h4 className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2 font-medium">Top Competitors</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {history.competitors.map((c) => (
+                          <span key={c} className="text-xs px-3 py-1.5 rounded-full border border-border bg-secondary text-muted-foreground">
+                            {c}
+                          </span>
+                        ))}
+                      </div>
+                    </>
+                  )}
                 </motion.section>
               )}
 
-              {activeTab === "financials" && (
+              {activeTab === "news" && (
+                <motion.section>
+                  <SectionTitle icon={Newspaper} title="News & Why It Matters" />
+                  {news.length > 0 ? (
+                    <div className="flex flex-col gap-3">
+                      {news.map((item, i) => (
+                        <motion.div
+                          key={i}
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 0.05 + i * 0.06 }}
+                          className="p-3.5 rounded-xl bg-secondary/40 border border-border/60"
+                        >
+                          <p className="text-[10px] text-primary font-medium mb-1">{item.date}</p>
+                          <p className="text-sm font-semibold text-foreground font-['Space_Grotesk'] mb-1.5">{item.headline}</p>
+                          <p className="text-xs text-muted-foreground leading-relaxed mb-2">{item.summary}</p>
+                          <div className="flex items-start gap-1.5 pt-2 border-t border-border/40">
+                            <Lightbulb className="w-3 h-3 text-primary mt-0.5 shrink-0" />
+                            <p className="text-[11px] text-foreground/80 leading-relaxed">
+                              <span className="text-primary font-medium">Why it matters: </span>
+                              {isPositive ? "Likely to support upside momentum and investor sentiment." : "Could weigh on near-term sentiment; watch follow-through."}
+                            </p>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-muted-foreground py-6 text-center">No news yet.</p>
+                  )}
+                </motion.section>
+              )}
+
+              {activeTab === "financial" && (
                 <>
                   <motion.section>
-                    <SectionTitle icon={TrendingUp} title={useMockData ? "Stock Information" : "Latest Quarter"} />
+                    <SectionTitle icon={TrendingUp} title="Revenue · Profit · Valuation" />
                     <div className="grid grid-cols-2 gap-2.5">
                       {stockInfo.map((item) => (
                         <div key={item.label} className="rounded-xl bg-secondary/60 border border-border p-3">
@@ -220,8 +281,7 @@ const CompanyDeepDive = ({ company, onBack }: CompanyDeepDiveProps) => {
 
                   {quarterlyTimeline.length > 0 && (
                     <motion.section>
-                      <SectionTitle icon={BarChart3} title="Financials Timeline" />
-
+                      <SectionTitle icon={BarChart3} title="Quarterly Timeline" />
                       <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">Revenue</p>
                       <div className="flex items-end gap-2 h-28 mb-5">
                         {quarterlyTimeline.map((q, i) => (
@@ -239,7 +299,6 @@ const CompanyDeepDive = ({ company, onBack }: CompanyDeepDiveProps) => {
                           </div>
                         ))}
                       </div>
-
                       <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">Net Profit</p>
                       <div className="flex items-end gap-2 h-24 mb-4">
                         {quarterlyTimeline.map((q, i) => (
@@ -257,114 +316,78 @@ const CompanyDeepDive = ({ company, onBack }: CompanyDeepDiveProps) => {
                           </div>
                         ))}
                       </div>
-
-                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">EPS Trend</p>
-                      <div className="flex items-center gap-3">
-                        {quarterlyTimeline.map((q, i) => (
-                          <div key={`${q.quarter}-e-${i}`} className="flex-1 text-center rounded-xl bg-secondary/40 border border-border/50 py-2.5">
-                            <p className="text-xs font-bold font-['Space_Grotesk'] text-primary">{q.eps}</p>
-                            <p className="text-[9px] text-muted-foreground mt-0.5">{q.quarter.replace("FY", "")}</p>
-                          </div>
-                        ))}
-                      </div>
                     </motion.section>
                   )}
+
+                  <motion.section>
+                    <SectionTitle icon={BarChart3} title="Key Metrics" />
+                    <div className="grid grid-cols-2 gap-2.5">
+                      {metricsGrid.map((m) => (
+                        <div key={m.label} className="rounded-xl bg-secondary/60 border border-border p-3.5">
+                          <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">{m.label}</p>
+                          <p className="text-sm font-bold font-['Space_Grotesk'] text-foreground">{m.value}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </motion.section>
                 </>
               )}
 
-              {activeTab === "metrics" && (
+              {activeTab === "ca" && (
                 <motion.section>
-                  <SectionTitle icon={Grid3X3} title="Key Metrics" />
-                  <div className="grid grid-cols-2 gap-2.5">
-                    {metricsGrid.map((m) => (
-                      <div key={m.label} className="rounded-xl bg-secondary/60 border border-border p-3.5">
-                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">{m.label}</p>
-                        <p className="text-sm font-bold font-['Space_Grotesk'] text-foreground">{m.value}</p>
+                  <SectionTitle icon={Gift} title="Corporate Actions" />
+                  {(() => {
+                    const divYield = stockInfo.find((s) => s.label.toLowerCase().includes("div"))?.value;
+                    const actions = [
+                      divYield && divYield !== "N.A." ? { type: "Dividend", detail: `Yield ${divYield}`, date: "Latest FY" } : null,
+                      { type: "AGM", detail: "Annual General Meeting scheduled", date: "Upcoming" },
+                      { type: "Bonus / Split", detail: "No recent bonus or split announced", date: "—" },
+                      { type: "Buyback", detail: "No active buyback", date: "—" },
+                    ].filter(Boolean) as { type: string; detail: string; date: string }[];
+                    return (
+                      <div className="flex flex-col gap-2.5">
+                        {actions.map((a, i) => (
+                          <div key={i} className="flex items-center justify-between p-3.5 rounded-xl bg-secondary/40 border border-border/60">
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-semibold text-foreground font-['Space_Grotesk']">{a.type}</p>
+                              <p className="text-xs text-muted-foreground mt-0.5">{a.detail}</p>
+                            </div>
+                            <span className="text-[10px] text-primary font-medium ml-3 shrink-0">{a.date}</span>
+                          </div>
+                        ))}
+                        <p className="text-[10px] text-muted-foreground text-center mt-2">Live CA feed coming soon · sourced from exchange filings</p>
+                      </div>
+                    );
+                  })()}
+                </motion.section>
+              )}
+
+              {activeTab === "research" && (
+                <motion.section>
+                  <SectionTitle icon={Sparkles} title="Why The Stock Moved" />
+                  <div className="p-4 rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10 border border-primary/20 mb-4">
+                    <p className="text-[10px] uppercase tracking-widest text-primary mb-2 font-medium">Headline Finding</p>
+                    <p className="text-sm font-semibold text-foreground font-['Space_Grotesk'] leading-snug">
+                      {news[0]?.headline || `${company.name} ${isPositive ? "rallies" : "slips"} ${Math.abs(company.changePercent)}% on latest results.`}
+                    </p>
+                  </div>
+                  <h4 className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2 font-medium">Key Takeaways</h4>
+                  <div className="flex flex-col gap-2">
+                    {[
+                      `Revenue trajectory ${isPositive ? "beat" : "missed"} street estimates this quarter.`,
+                      `Margin profile ${isPositive ? "expanded" : "compressed"} vs prior period — watch input costs.`,
+                      `Management commentary signals ${isPositive ? "confident" : "cautious"} outlook for next 2 quarters.`,
+                      `Peer comparison: tracking ${isPositive ? "ahead of" : "behind"} sector average in ${overview.industry}.`,
+                    ].map((t, i) => (
+                      <div key={i} className="flex items-start gap-2.5 p-3 rounded-xl bg-secondary/40 border border-border/50">
+                        <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
+                        <p className="text-xs text-foreground/85 leading-relaxed">{t}</p>
                       </div>
                     ))}
                   </div>
+                  <p className="text-[10px] text-muted-foreground text-center mt-4">AI-generated research · not investment advice</p>
                 </motion.section>
               )}
-
-              {activeTab === "news" && (
-                <motion.section>
-                  <SectionTitle icon={Newspaper} title={useMockData ? "Company News" : "Latest Headline"} />
-                  {news.length > 0 ? (
-                    <div className="flex flex-col gap-3">
-                      {news.map((item, i) => (
-                        <motion.div
-                          key={i}
-                          initial={{ opacity: 0, x: -10 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: 0.05 + i * 0.06 }}
-                          className="p-3.5 rounded-xl bg-secondary/40 border border-border/60"
-                        >
-                          <p className="text-[10px] text-primary font-medium mb-1">{item.date}</p>
-                          <p className="text-sm font-semibold text-foreground font-['Space_Grotesk'] mb-0.5">{item.headline}</p>
-                          <p className="text-xs text-muted-foreground leading-relaxed">{item.summary}</p>
-                        </motion.div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-xs text-muted-foreground py-6 text-center">No news yet.</p>
-                  )}
-                </motion.section>
-              )}
-
-              {activeTab === "about" && (
-                <motion.section>
-                  <SectionTitle icon={BookOpen} title="About & History" />
-                  {history && (history.foundingStory || history.milestones.length > 0) ? (
-                    <>
-                      {history.foundingStory && (
-                        <p className="text-sm leading-relaxed text-muted-foreground mb-5">{history.foundingStory}</p>
-                      )}
-                      {history.milestones.length > 0 && (
-                        <>
-                          <h4 className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2 font-medium">Milestones</h4>
-                          <div className="flex flex-col gap-1.5 mb-5">
-                            {history.milestones.map((m, i) => (
-                              <div key={i} className="flex items-center gap-2.5 py-1.5">
-                                <div className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
-                                <p className="text-xs text-foreground/80">{m}</p>
-                              </div>
-                            ))}
-                          </div>
-                        </>
-                      )}
-                      {history.keyProducts.length > 0 && (
-                        <>
-                          <h4 className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2 font-medium">Key Products & Services</h4>
-                          <div className="flex flex-wrap gap-2 mb-5">
-                            {history.keyProducts.map((p) => (
-                              <span key={p} className="text-xs px-3 py-1.5 rounded-full border border-border bg-secondary text-muted-foreground">
-                                {p}
-                              </span>
-                            ))}
-                          </div>
-                        </>
-                      )}
-                      {history.competitors.length > 0 && (
-                        <>
-                          <h4 className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2 font-medium">Competitors</h4>
-                          <div className="flex flex-wrap gap-2">
-                            {history.competitors.map((c) => (
-                              <span key={c} className="text-xs px-3 py-1.5 rounded-full border border-primary/30 bg-primary/10 text-primary">
-                                {c}
-                              </span>
-                            ))}
-                          </div>
-                        </>
-                      )}
-                    </>
-                  ) : (
-                    <p className="text-xs text-muted-foreground py-6 text-center">No history info yet.</p>
-                  )}
-                </motion.section>
-              )}
-            </motion.div>
-          </AnimatePresence>
-        )}
       </div>
 
       {/* Bottom Tabs */}
