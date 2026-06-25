@@ -24,6 +24,7 @@ const CompanyDeepDive = ({ company, onBack }: CompanyDeepDiveProps) => {
   const isPositive = company.changePercent >= 0;
   const dragX = useMotionValue(0);
   const pageOpacity = useTransform(dragX, [0, 150], [1, 0.7]);
+  const [activeTab, setActiveTab] = useState<"overview" | "financials" | "metrics" | "news" | "about">("overview");
 
   // Live data hook (only enabled when not in mock mode)
   const { data: live, isLoading: liveLoading } = useLiveDeepDive(company.id, !useMockData);
