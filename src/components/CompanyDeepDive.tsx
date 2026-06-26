@@ -202,53 +202,6 @@ const CompanyDeepDive = ({ company, onBack }: CompanyDeepDiveProps) => {
                     ))}
                   </div>
 
-                  <div className="flex items-center gap-2 mb-3">
-                    <Sparkles className="w-4 h-4 text-primary" />
-                    <h4 className="text-[11px] uppercase tracking-widest text-muted-foreground font-medium">Highlights</h4>
-                  </div>
-                  {(() => {
-                    const m = metricsGrid.reduce<Record<string, string>>((acc, x) => { acc[x.label] = x.value; return acc; }, {});
-                    const profitParts = [
-                      m["Net Margin"] && `Net margin ${m["Net Margin"]}`,
-                      m["ROE"] && `ROE ${m["ROE"]}`,
-                      m["Free Cash Flow"] && `FCF ${m["Free Cash Flow"]}`,
-                    ].filter(Boolean) as string[];
-                    const highlights = [
-                      {
-                        title: "Business model",
-                        detail: `${overview.sector} · ${overview.industry} — core operations driving recurring revenue and long-term client engagements.`,
-                      },
-                      {
-                        title: "Competitive advantage",
-                        detail: history && history.keyProducts.length > 0
-                          ? `Strong moat via ${history.keyProducts.slice(0, 3).join(", ")}.`
-                          : `Market leadership in ${overview.industry}.`,
-                      },
-                      {
-                        title: "Management integrity",
-                        detail: `Led by ${overview.ceo}. Clean audit history and transparent quarterly disclosures.`,
-                      },
-                      {
-                        title: "Profitability",
-                        detail: profitParts.length ? profitParts.join(", ") + "." : "Consistent profitability across recent quarters.",
-                      },
-                      {
-                        title: "Strategic news",
-                        detail: news[0]?.headline || `Continued focus on scaling ${overview.industry} offerings.`,
-                      },
-                    ];
-                    return (
-                      <div className="flex flex-col gap-3 mb-6">
-                        {highlights.map((h) => (
-                          <div key={h.title} className="pl-3 border-l-2 border-primary">
-                            <p className="text-sm font-semibold text-foreground font-['Space_Grotesk'] mb-1">{h.title}</p>
-                            <p className="text-xs text-muted-foreground leading-relaxed">{h.detail}</p>
-                          </div>
-                        ))}
-                      </div>
-                    );
-                  })()}
-
                   {history && history.competitors.length > 0 && (
                     <>
                       <h4 className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2 font-medium">Top Competitors</h4>
