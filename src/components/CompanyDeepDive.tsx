@@ -24,7 +24,7 @@ const CompanyDeepDive = ({ company, onBack }: CompanyDeepDiveProps) => {
   const isPositive = company.changePercent >= 0;
   const dragX = useMotionValue(0);
   const pageOpacity = useTransform(dragX, [0, 150], [1, 0.7]);
-  const [activeTab, setActiveTab] = useState<"about" | "news" | "financial" | "ca">("about");
+  const [activeTab, setActiveTab] = useState<"about" | "highlights" | "news" | "financial" | "ca">("about");
 
   // Live data hook (only enabled when not in mock mode)
   const { data: live, isLoading: liveLoading } = useLiveDeepDive(company.id, !useMockData);
@@ -202,10 +202,24 @@ const CompanyDeepDive = ({ company, onBack }: CompanyDeepDiveProps) => {
                     ))}
                   </div>
 
-                  <div className="flex items-center gap-2 mb-3">
-                    <Sparkles className="w-4 h-4 text-primary" />
-                    <h4 className="text-[11px] uppercase tracking-widest text-muted-foreground font-medium">Highlights</h4>
-                  </div>
+                  {history && history.competitors.length > 0 && (
+                    <>
+                      <h4 className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2 font-medium">Top Competitors</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {history.competitors.map((c) => (
+                          <span key={c} className="text-xs px-3 py-1.5 rounded-full border border-border bg-secondary text-muted-foreground">
+                            {c}
+                          </span>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </motion.section>
+              )}
+
+              {activeTab === "highlights" && (
+                <motion.section>
+                  <SectionTitle icon={Sparkles} title="Highlights" />
                   {(() => {
                     const m = metricsGrid.reduce<Record<string, string>>((acc, x) => { acc[x.label] = x.value; return acc; }, {});
                     const profitParts = [
@@ -238,7 +252,7 @@ const CompanyDeepDive = ({ company, onBack }: CompanyDeepDiveProps) => {
                       },
                     ];
                     return (
-                      <div className="flex flex-col gap-3 mb-6">
+                      <div className="flex flex-col gap-3">
                         {highlights.map((h) => (
                           <div key={h.title} className="pl-3 border-l-2 border-primary">
                             <p className="text-sm font-semibold text-foreground font-['Space_Grotesk'] mb-1">{h.title}</p>
@@ -248,19 +262,6 @@ const CompanyDeepDive = ({ company, onBack }: CompanyDeepDiveProps) => {
                       </div>
                     );
                   })()}
-
-                  {history && history.competitors.length > 0 && (
-                    <>
-                      <h4 className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2 font-medium">Top Competitors</h4>
-                      <div className="flex flex-wrap gap-2">
-                        {history.competitors.map((c) => (
-                          <span key={c} className="text-xs px-3 py-1.5 rounded-full border border-border bg-secondary text-muted-foreground">
-                            {c}
-                          </span>
-                        ))}
-                      </div>
-                    </>
-                  )}
                 </motion.section>
               )}
 
@@ -404,6 +405,7 @@ const CompanyDeepDive = ({ company, onBack }: CompanyDeepDiveProps) => {
           <div className="max-w-[430px] mx-auto flex items-center justify-between px-1.5 py-2 gap-1">
             {([
               { id: "about", label: "About" },
+              { id: "highlights", label: "Highlights" },
               { id: "news", label: "News" },
               { id: "financial", label: "Financial" },
               { id: "ca", label: "CA" },
