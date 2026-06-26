@@ -376,7 +376,6 @@ const CompanyDeepDive = ({ company, onBack }: CompanyDeepDiveProps) => {
               { id: "news", label: "News" },
               { id: "financial", label: "Financial" },
               { id: "ca", label: "CA" },
-              { id: "research", label: "Research" },
             ] as const).map((t) => {
               const active = activeTab === t.id;
               return (
