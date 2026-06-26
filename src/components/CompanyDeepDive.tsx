@@ -362,32 +362,6 @@ const CompanyDeepDive = ({ company, onBack }: CompanyDeepDiveProps) => {
                 </motion.section>
               )}
 
-              {activeTab === "research" && (
-                <motion.section>
-                  <SectionTitle icon={Sparkles} title="Why The Stock Moved" />
-                  <div className="p-4 rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10 border border-primary/20 mb-4">
-                    <p className="text-[10px] uppercase tracking-widest text-primary mb-2 font-medium">Headline Finding</p>
-                    <p className="text-sm font-semibold text-foreground font-['Space_Grotesk'] leading-snug">
-                      {news[0]?.headline || `${company.name} ${isPositive ? "rallies" : "slips"} ${Math.abs(company.changePercent)}% on latest results.`}
-                    </p>
-                  </div>
-                  <h4 className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2 font-medium">Key Takeaways</h4>
-                  <div className="flex flex-col gap-2">
-                    {[
-                      `Revenue trajectory ${isPositive ? "beat" : "missed"} street estimates this quarter.`,
-                      `Margin profile ${isPositive ? "expanded" : "compressed"} vs prior period — watch input costs.`,
-                      `Management commentary signals ${isPositive ? "confident" : "cautious"} outlook for next 2 quarters.`,
-                      `Peer comparison: tracking ${isPositive ? "ahead of" : "behind"} sector average in ${overview.industry}.`,
-                    ].map((t, i) => (
-                      <div key={i} className="flex items-start gap-2.5 p-3 rounded-xl bg-secondary/40 border border-border/50">
-                        <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
-                        <p className="text-xs text-foreground/85 leading-relaxed">{t}</p>
-                      </div>
-                    ))}
-                  </div>
-                  <p className="text-[10px] text-muted-foreground text-center mt-4">AI-generated research · not investment advice</p>
-                </motion.section>
-              )}
             </motion.div>
           </AnimatePresence>
         )}
