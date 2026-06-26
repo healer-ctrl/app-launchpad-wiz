@@ -103,7 +103,9 @@ export function usePushNotifications() {
           await PushNotifications.removeAllListeners();
         } catch {}
         const installId = await getInstallId();
-        await supabase.from("device_tokens").update({ enabled: false }).eq("install_id", installId);
+        await supabase.functions.invoke("device-token", {
+          body: { action: "disable", install_id: installId },
+        });
       }
       await Preferences.set({ key: ENABLED_KEY, value: "false" });
       setEnabled(false);
