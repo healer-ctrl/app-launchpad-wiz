@@ -46,10 +46,9 @@ export function usePushNotifications() {
         const installId = await getInstallId();
         const info = await Device.getInfo();
         const platform = info.platform === "ios" ? "ios" : "android";
-        await supabase.from("device_tokens").upsert(
-          { install_id: installId, token: token.value, platform, enabled: true },
-          { onConflict: "install_id" }
-        );
+        await supabase.functions.invoke("device-token", {
+          body: { action: "register", install_id: installId, token: token.value, platform },
+        });
       } catch (err) {
         console.error("Failed to save push token:", err);
       }
