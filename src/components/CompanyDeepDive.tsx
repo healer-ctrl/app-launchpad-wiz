@@ -405,6 +405,7 @@ const CompanyDeepDive = ({ company, onBack }: CompanyDeepDiveProps) => {
           <div className="max-w-[430px] mx-auto flex items-center justify-between px-1.5 py-2 gap-1">
             {([
               { id: "about", label: "About" },
+              { id: "highlights", label: "Highlights" },
               { id: "news", label: "News" },
               { id: "financial", label: "Financial" },
               { id: "ca", label: "CA" },
