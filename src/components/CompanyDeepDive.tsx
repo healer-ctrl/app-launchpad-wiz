@@ -85,13 +85,16 @@ const CompanyDeepDive = ({ company, onBack }: CompanyDeepDiveProps) => {
       ceo: p?.ceo || "N.A.",
       employees: p?.employees || "N.A.",
     };
+    const nf = nse?.financials;
     stockInfo = [
+      { label: "Current Price", value: nf?.last_price ? `₹${nf.last_price}` : (ls?.quarter || "N.A.") },
+      { label: "Change", value: nf?.change_pct || "N.A." },
+      { label: "Market Cap", value: nf?.market_cap || "N.A." },
+      { label: "52W High", value: nf?.week52_high ? `₹${nf.week52_high}` : "N.A." },
+      { label: "52W Low", value: nf?.week52_low ? `₹${nf.week52_low}` : "N.A." },
+      { label: "P/E Ratio", value: nf?.pe_ratio || ls?.pe_ratio || "N.A." },
+      { label: "Face Value", value: nf?.face_value ? `₹${nf.face_value}` : "N.A." },
       { label: "Latest Quarter", value: ls?.quarter || "N.A." },
-      { label: "Revenue", value: ls?.revenue || "N.A." },
-      { label: "Net Profit", value: ls?.profit || "N.A." },
-      { label: "Growth (YoY)", value: ls?.growth || "N.A." },
-      { label: "P/E Ratio", value: ls?.pe_ratio || "N.A." },
-      { label: "Beat/Miss", value: ls?.beat_or_miss || "N.A." },
     ];
     quarterlyTimeline = live.timeline;
     metricsGrid = [
