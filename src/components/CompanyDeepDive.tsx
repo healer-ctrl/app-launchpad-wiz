@@ -29,6 +29,10 @@ const CompanyDeepDive = ({ company, onBack }: CompanyDeepDiveProps) => {
 
   // Live data hook (only enabled when not in mock mode)
   const { data: live, isLoading: liveLoading } = useLiveDeepDive(company.id, !useMockData);
+  const { data: nse, isLoading: nseLoading } = useNseCompanyData(
+    company.id,
+    !useMockData && (activeTab === "ca" || activeTab === "financial"),
+  );
   const mockData = deepDiveData[company.id];
 
   // ---- Build a unified view model ----
