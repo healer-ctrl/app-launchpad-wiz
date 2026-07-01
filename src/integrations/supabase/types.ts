@@ -143,6 +143,130 @@ export type Database = {
         }
         Relationships: []
       }
+      nse_corporate_actions: {
+        Row: {
+          action_type: string
+          company_id: string
+          created_at: string
+          details: string | null
+          ex_date: string | null
+          id: string
+          purpose: string | null
+          raw: Json | null
+          record_date: string | null
+          source: string
+          symbol: string
+        }
+        Insert: {
+          action_type: string
+          company_id: string
+          created_at?: string
+          details?: string | null
+          ex_date?: string | null
+          id?: string
+          purpose?: string | null
+          raw?: Json | null
+          record_date?: string | null
+          source?: string
+          symbol: string
+        }
+        Update: {
+          action_type?: string
+          company_id?: string
+          created_at?: string
+          details?: string | null
+          ex_date?: string | null
+          id?: string
+          purpose?: string | null
+          raw?: Json | null
+          record_date?: string | null
+          source?: string
+          symbol?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nse_corporate_actions_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      nse_financials: {
+        Row: {
+          change_pct: string | null
+          company_id: string
+          created_at: string
+          div_yield: string | null
+          eps: string | null
+          face_value: string | null
+          fetched_at: string
+          id: string
+          last_price: string | null
+          market_cap: string | null
+          pb_ratio: string | null
+          pe_ratio: string | null
+          raw: Json | null
+          sector_pe: string | null
+          source: string
+          symbol: string
+          updated_at: string
+          week52_high: string | null
+          week52_low: string | null
+        }
+        Insert: {
+          change_pct?: string | null
+          company_id: string
+          created_at?: string
+          div_yield?: string | null
+          eps?: string | null
+          face_value?: string | null
+          fetched_at?: string
+          id?: string
+          last_price?: string | null
+          market_cap?: string | null
+          pb_ratio?: string | null
+          pe_ratio?: string | null
+          raw?: Json | null
+          sector_pe?: string | null
+          source?: string
+          symbol: string
+          updated_at?: string
+          week52_high?: string | null
+          week52_low?: string | null
+        }
+        Update: {
+          change_pct?: string | null
+          company_id?: string
+          created_at?: string
+          div_yield?: string | null
+          eps?: string | null
+          face_value?: string | null
+          fetched_at?: string
+          id?: string
+          last_price?: string | null
+          market_cap?: string | null
+          pb_ratio?: string | null
+          pe_ratio?: string | null
+          raw?: Json | null
+          sector_pe?: string | null
+          source?: string
+          symbol?: string
+          updated_at?: string
+          week52_high?: string | null
+          week52_low?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nse_financials_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: true
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       report_summaries: {
         Row: {
           beat_or_miss: string | null
