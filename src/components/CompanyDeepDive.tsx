@@ -6,6 +6,7 @@ import { deepDiveData } from "@/data/companyDeepDive";
 import CompanyLogo from "@/components/CompanyLogo";
 import { useSettings } from "@/hooks/useSettings";
 import { useLiveDeepDive } from "@/hooks/useLiveDeepDive";
+import { useNseCompanyData } from "@/hooks/useNseCompanyData";
 
 interface CompanyDeepDiveProps {
   company: CompanyData;
