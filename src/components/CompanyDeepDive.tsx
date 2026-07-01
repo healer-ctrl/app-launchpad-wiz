@@ -376,30 +376,53 @@ const CompanyDeepDive = ({ company, onBack }: CompanyDeepDiveProps) => {
               {activeTab === "ca" && (
                 <motion.section>
                   <SectionTitle icon={Gift} title="Corporate Actions" />
-                  {(() => {
-                    const divYield = stockInfo.find((s) => s.label.toLowerCase().includes("div"))?.value;
-                    const actions = [
-                      divYield && divYield !== "N.A." ? { type: "Dividend", detail: `Yield ${divYield}`, date: "Latest FY" } : null,
-                      { type: "AGM", detail: "Annual General Meeting scheduled", date: "Upcoming" },
-                      { type: "Bonus / Split", detail: "No recent bonus or split announced", date: "—" },
-                      { type: "Buyback", detail: "No active buyback", date: "—" },
-                    ].filter(Boolean) as { type: string; detail: string; date: string }[];
-                    return (
-                      <div className="flex flex-col gap-2.5">
-                        {actions.map((a, i) => (
-                          <div key={i} className="flex items-center justify-between p-3.5 rounded-xl bg-secondary/40 border border-border/60">
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-semibold text-foreground font-['Space_Grotesk']">{a.type}</p>
-                              <p className="text-xs text-muted-foreground mt-0.5">{a.detail}</p>
+                  {useMockData ? (
+                    (() => {
+                      const divYield = stockInfo.find((s) => s.label.toLowerCase().includes("div"))?.value;
+                      const actions = [
+                        divYield && divYield !== "N.A." ? { type: "Dividend", detail: `Yield ${divYield}`, date: "Latest FY" } : null,
+                        { type: "AGM", detail: "Annual General Meeting scheduled", date: "Upcoming" },
+                        { type: "Bonus / Split", detail: "No recent bonus or split announced", date: "—" },
+                        { type: "Buyback", detail: "No active buyback", date: "—" },
+                      ].filter(Boolean) as { type: string; detail: string; date: string }[];
+                      return (
+                        <div className="flex flex-col gap-2.5">
+                          {actions.map((a, i) => (
+                            <div key={i} className="flex items-center justify-between p-3.5 rounded-xl bg-secondary/40 border border-border/60">
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-semibold text-foreground font-['Space_Grotesk']">{a.type}</p>
+                                <p className="text-xs text-muted-foreground mt-0.5">{a.detail}</p>
+                              </div>
+                              <span className="text-[10px] text-primary font-medium ml-3 shrink-0">{a.date}</span>
                             </div>
-                            <span className="text-[10px] text-primary font-medium ml-3 shrink-0">{a.date}</span>
+                          ))}
+                        </div>
+                      );
+                    })()
+                  ) : nseLoading && !nse ? (
+                    <div className="flex items-center gap-2 text-muted-foreground text-xs py-4">
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" /> Fetching from NSE…
+                    </div>
+                  ) : nse && nse.corporateActions.length > 0 ? (
+                    <div className="flex flex-col gap-2.5">
+                      {nse.corporateActions.map((a) => (
+                        <div key={a.id} className="flex items-center justify-between p-3.5 rounded-xl bg-secondary/40 border border-border/60">
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-foreground font-['Space_Grotesk'] truncate">{a.action_type}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{a.purpose || a.details || "—"}</p>
                           </div>
-                        ))}
-                        <p className="text-[10px] text-muted-foreground text-center mt-2">Live CA feed coming soon · sourced from exchange filings</p>
-                      </div>
-                    );
-                  })()}
+                          <span className="text-[10px] text-primary font-medium ml-3 shrink-0">
+                            {a.ex_date ? `Ex ${a.ex_date}` : a.record_date ? `Rec ${a.record_date}` : "—"}
+                          </span>
+                        </div>
+                      ))}
+                      <p className="text-[10px] text-muted-foreground text-center mt-2">Sourced live from nseindia.com</p>
+                    </div>
+                  ) : (
+                    <p className="text-xs text-muted-foreground text-center py-6">No corporate actions found on NSE for {company.ticker}.</p>
+                  )}
                 </motion.section>
+
               )}
 
             </motion.div>
