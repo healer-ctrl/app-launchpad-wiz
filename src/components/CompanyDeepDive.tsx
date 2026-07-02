@@ -26,6 +26,7 @@ const CompanyDeepDive = ({ company, onBack }: CompanyDeepDiveProps) => {
   const dragX = useMotionValue(0);
   const pageOpacity = useTransform(dragX, [0, 150], [1, 0.7]);
   const [activeTab, setActiveTab] = useState<"about" | "highlights" | "news" | "financial" | "ca">("about");
+  const [expandedCaId, setExpandedCaId] = useState<string | null>(null);
 
   // Live data hook (only enabled when not in mock mode)
   const { data: live, isLoading: liveLoading } = useLiveDeepDive(company.id, !useMockData);
