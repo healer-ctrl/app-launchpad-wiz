@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, useMotionValue, useTransform, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Building2, TrendingUp, TrendingDown, BarChart3, Newspaper, Loader2, Gift, Lightbulb, Sparkles, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Building2, TrendingUp, TrendingDown, BarChart3, Newspaper, Loader2, Gift, Lightbulb, Sparkles, ShieldCheck, ChevronDown } from "lucide-react";
 import type { CompanyData } from "@/data/mockFinancials";
 import { deepDiveData } from "@/data/companyDeepDive";
 import CompanyLogo from "@/components/CompanyLogo";
