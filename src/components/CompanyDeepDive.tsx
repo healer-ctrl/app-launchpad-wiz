@@ -20,6 +20,59 @@ const SectionTitle = ({ icon: Icon, title }: { icon: React.ElementType; title: s
   </div>
 );
 
+// Parse an NSE corporate action into structured detail rows + short summary.
+function parseCaDetails(
+  a: { action_type: string; purpose: string | null; ex_date: string | null; record_date: string | null; details: string | null },
+  faceValue: string | null,
+): { rows: [string, string][]; summary: string } {
+  const text = `${a.purpose ?? ""} ${a.details ?? ""}`.trim();
+  const type = (a.action_type || "").toLowerCase();
+  const rows: [string, string][] = [];
+  const push = (k: string, v: string | null | undefined) => rows.push([k, v && v.trim() ? v : "N.A."]);
+
+  const amountMatch = text.match(/(?:rs\.?|inr|₹)\s*([\d.]+)/i) || text.match(/([\d.]+)\s*(?:per share|\/-)/i);
+  const pctMatch = text.match(/([\d.]+)\s*%/);
+  const ratioMatch = text.match(/(\d+)\s*[:for]{1,3}\s*(\d+)/i);
+
+  if (type.includes("dividend")) {
+    push("Ex-Date", a.ex_date);
+    push("Record Date", a.record_date);
+    push("Amount", amountMatch ? `₹${amountMatch[1]} / share` : null);
+    push("Dividend %", pctMatch ? `${pctMatch[1]}%` : null);
+    push("Face Value", faceValue ? `₹${faceValue}` : null);
+    push("Type", /interim/i.test(text) ? "Interim" : /final/i.test(text) ? "Final" : /special/i.test(text) ? "Special" : "Dividend");
+  } else if (type.includes("split") || /face value/i.test(text)) {
+    push("Ex-Date", a.ex_date);
+    push("Record Date", a.record_date);
+    push("Split Ratio", ratioMatch ? `${ratioMatch[1]} : ${ratioMatch[2]}` : null);
+    push("Old FV", faceValue ? `₹${faceValue}` : null);
+  } else if (type.includes("bonus")) {
+    push("Ex-Date", a.ex_date);
+    push("Record Date", a.record_date);
+    push("Bonus Ratio", ratioMatch ? `${ratioMatch[1]} : ${ratioMatch[2]}` : null);
+  } else if (type.includes("rights")) {
+    push("Ex-Date", a.ex_date);
+    push("Record Date", a.record_date);
+    push("Ratio", ratioMatch ? `${ratioMatch[1]} : ${ratioMatch[2]}` : null);
+    push("Issue Price", amountMatch ? `₹${amountMatch[1]}` : null);
+  } else if (type.includes("buyback")) {
+    push("Record Date", a.record_date);
+    push("Buyback Price", amountMatch ? `₹${amountMatch[1]}` : null);
+  } else if (type.includes("agm") || type.includes("egm") || type.includes("meeting")) {
+    push("Meeting Date", a.ex_date || a.record_date);
+    push("Type", /egm/i.test(type) ? "EGM" : "AGM");
+  } else {
+    push("Ex-Date", a.ex_date);
+    push("Record Date", a.record_date);
+  }
+
+  const summary = text.length > 0
+    ? text.length > 220 ? `${text.slice(0, 220)}…` : text
+    : `${a.action_type} announced by the company.`;
+  return { rows, summary };
+}
+
+
 const CompanyDeepDive = ({ company, onBack }: CompanyDeepDiveProps) => {
   const { useMockData } = useSettings();
   const isPositive = company.changePercent >= 0;
