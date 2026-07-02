@@ -1,45 +1,19 @@
-# Infinite Scroll Feed with Smart Prefetch
-
-Yes — totally feasible and a great UX choice. We have **501 summaries across 397 companies** in the DB, so paginating is the right call.
-
-## Strategy
-
-- Load **15 reports** initially.
-- When the user's active card index reaches `loadedCount - 3`, prefetch the **next 10**.
-- React Query caches each page, so scrolling back is instant.
-- A skeleton card appears at the tail while the next page is in flight (usually invisible since we prefetch 3 cards early).
-- Stop fetching when the server returns fewer rows than the page size.
+## Goal
+Make each Corporate Action item in the CA tab expandable to reveal full details (ex-date, record date, ratio, face value, purpose, AGM summary, etc.).
 
 ## Changes
 
-### 1. `src/hooks/useFeedData.ts` — switch to `useInfiniteQuery`
-- Replace `useQuery` with TanStack's `useInfiniteQuery` (already available, no new deps).
-- Page params: first page `limit=15`, subsequent pages `limit=10`.
-- Query: `.order("processed_at", { ascending: false }).range(offset, offset + limit - 1)`.
-- `getNextPageParam`: return `undefined` when last page returned `< limit` rows (end of data).
-- Apply current dedup (latest summary per company) **across all loaded pages**, not per-page, so the same company never appears twice as new pages arrive.
-- Return shape: `{ companies, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading }`.
-
-### 2. `src/pages/Index.tsx` — trigger prefetch
-- Destructure new fields from the hook.
-- Effect watching `activeIndex`:
-  ```
-  if (hasNextPage && !isFetchingNextPage && activeIndex >= filteredCompanies.length - 3) {
-    fetchNextPage();
-  }
-  ```
-- Append a `<FeedSkeleton />` as the last snap section while `isFetchingNextPage` is true so the user can keep scrolling without bumping into a wall.
-- No UI/color/layout changes — just one extra skeleton card at the tail when loading.
-
-## Technical notes
-
-- Supabase `.range(from, to)` is inclusive on both ends.
-- `staleTime: 5 * 60 * 1000` stays — pages cached for 5 min.
-- Prefetch threshold (3 cards) is tunable.
-- No DB schema changes, no edge function changes, no design changes.
-- Mock-data path unchanged (still returns full mock array in one shot).
-- Filters remain client-side over loaded pages (existing behavior preserved).
+**`src/components/CompanyDeepDive.tsx` (CA tab only)**
+- Convert each CA row into a clickable card using a local `expandedCaId` state (only one open at a time; tap again to close).
+- Collapsed view (unchanged): icon + action type + short purpose + ex-date badge + chevron that rotates when open.
+- Expanded view (animated with framer-motion height): renders a details grid based on `action_type`:
+  - **Dividend** → Purpose, Ex-Date, Record Date, Face Value (from `nseData.financials.face_value`), Dividend amount (parsed from `purpose`/`details` when present, e.g. "Rs 8 per share"), Type (Interim/Final if detected in purpose).
+  - **Bonus / Split** → Ratio (parsed from purpose e.g. "1:1", "5:1"), Ex-Date, Record Date, Face Value before/after (for splits when parseable), Announcement note.
+  - **Buyback** → Purpose, Ex-Date, Record Date, Details text.
+  - **AGM / EGM** → Meeting date (ex-date), 1–2 line summary derived from `purpose`/`details`.
+  - **Fallback / other** → Purpose, Ex-Date, Record Date, raw Details.
+- Add a tiny `parseCaDetails(action)` helper inside the file to extract ratio / dividend amount / type from the `purpose` + `details` strings using simple regex — no backend changes.
+- Mock-mode CA cards (the current placeholder list) get the same expand behavior with hardcoded sample details so both modes feel consistent.
 
 ## Out of scope
-- No changes to bookmarks/search tabs.
-- Dedup behavior unchanged — still one card per company (latest report).
+- No DB schema changes, no new edge function calls, no new fields fetched. Everything is derived from data already stored in `nse_corporate_actions` + `nse_financials`.

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, useMotionValue, useTransform, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Building2, TrendingUp, TrendingDown, BarChart3, Newspaper, Loader2, Gift, Lightbulb, Sparkles, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Building2, TrendingUp, TrendingDown, BarChart3, Newspaper, Loader2, Gift, Lightbulb, Sparkles, ShieldCheck, ChevronDown } from "lucide-react";
 import type { CompanyData } from "@/data/mockFinancials";
 import { deepDiveData } from "@/data/companyDeepDive";
 import CompanyLogo from "@/components/CompanyLogo";
@@ -20,12 +20,66 @@ const SectionTitle = ({ icon: Icon, title }: { icon: React.ElementType; title: s
   </div>
 );
 
+// Parse an NSE corporate action into structured detail rows + short summary.
+function parseCaDetails(
+  a: { action_type: string; purpose: string | null; ex_date: string | null; record_date: string | null; details: string | null },
+  faceValue: string | null,
+): { rows: [string, string][]; summary: string } {
+  const text = `${a.purpose ?? ""} ${a.details ?? ""}`.trim();
+  const type = (a.action_type || "").toLowerCase();
+  const rows: [string, string][] = [];
+  const push = (k: string, v: string | null | undefined) => rows.push([k, v && v.trim() ? v : "N.A."]);
+
+  const amountMatch = text.match(/(?:rs\.?|inr|₹)\s*([\d.]+)/i) || text.match(/([\d.]+)\s*(?:per share|\/-)/i);
+  const pctMatch = text.match(/([\d.]+)\s*%/);
+  const ratioMatch = text.match(/(\d+)\s*[:for]{1,3}\s*(\d+)/i);
+
+  if (type.includes("dividend")) {
+    push("Ex-Date", a.ex_date);
+    push("Record Date", a.record_date);
+    push("Amount", amountMatch ? `₹${amountMatch[1]} / share` : null);
+    push("Dividend %", pctMatch ? `${pctMatch[1]}%` : null);
+    push("Face Value", faceValue ? `₹${faceValue}` : null);
+    push("Type", /interim/i.test(text) ? "Interim" : /final/i.test(text) ? "Final" : /special/i.test(text) ? "Special" : "Dividend");
+  } else if (type.includes("split") || /face value/i.test(text)) {
+    push("Ex-Date", a.ex_date);
+    push("Record Date", a.record_date);
+    push("Split Ratio", ratioMatch ? `${ratioMatch[1]} : ${ratioMatch[2]}` : null);
+    push("Old FV", faceValue ? `₹${faceValue}` : null);
+  } else if (type.includes("bonus")) {
+    push("Ex-Date", a.ex_date);
+    push("Record Date", a.record_date);
+    push("Bonus Ratio", ratioMatch ? `${ratioMatch[1]} : ${ratioMatch[2]}` : null);
+  } else if (type.includes("rights")) {
+    push("Ex-Date", a.ex_date);
+    push("Record Date", a.record_date);
+    push("Ratio", ratioMatch ? `${ratioMatch[1]} : ${ratioMatch[2]}` : null);
+    push("Issue Price", amountMatch ? `₹${amountMatch[1]}` : null);
+  } else if (type.includes("buyback")) {
+    push("Record Date", a.record_date);
+    push("Buyback Price", amountMatch ? `₹${amountMatch[1]}` : null);
+  } else if (type.includes("agm") || type.includes("egm") || type.includes("meeting")) {
+    push("Meeting Date", a.ex_date || a.record_date);
+    push("Type", /egm/i.test(type) ? "EGM" : "AGM");
+  } else {
+    push("Ex-Date", a.ex_date);
+    push("Record Date", a.record_date);
+  }
+
+  const summary = text.length > 0
+    ? text.length > 220 ? `${text.slice(0, 220)}…` : text
+    : `${a.action_type} announced by the company.`;
+  return { rows, summary };
+}
+
+
 const CompanyDeepDive = ({ company, onBack }: CompanyDeepDiveProps) => {
   const { useMockData } = useSettings();
   const isPositive = company.changePercent >= 0;
   const dragX = useMotionValue(0);
   const pageOpacity = useTransform(dragX, [0, 150], [1, 0.7]);
   const [activeTab, setActiveTab] = useState<"about" | "highlights" | "news" | "financial" | "ca">("about");
+  const [expandedCaId, setExpandedCaId] = useState<string | null>(null);
 
   // Live data hook (only enabled when not in mock mode)
   const { data: live, isLoading: liveLoading } = useLiveDeepDive(company.id, !useMockData);
@@ -379,23 +433,58 @@ const CompanyDeepDive = ({ company, onBack }: CompanyDeepDiveProps) => {
                   {useMockData ? (
                     (() => {
                       const divYield = stockInfo.find((s) => s.label.toLowerCase().includes("div"))?.value;
+                      const faceVal = stockInfo.find((s) => s.label.toLowerCase().includes("face"))?.value || "N.A.";
                       const actions = [
-                        divYield && divYield !== "N.A." ? { type: "Dividend", detail: `Yield ${divYield}`, date: "Latest FY" } : null,
-                        { type: "AGM", detail: "Annual General Meeting scheduled", date: "Upcoming" },
-                        { type: "Bonus / Split", detail: "No recent bonus or split announced", date: "—" },
-                        { type: "Buyback", detail: "No active buyback", date: "—" },
-                      ].filter(Boolean) as { type: string; detail: string; date: string }[];
+                        divYield && divYield !== "N.A."
+                          ? { id: "m-div", type: "Dividend", detail: `Yield ${divYield}`, date: "Latest FY",
+                              rows: [["Purpose", "Final dividend"], ["Yield", divYield], ["Face Value", faceVal], ["Ex-Date", "As per record"]] as [string, string][] }
+                          : null,
+                        { id: "m-agm", type: "AGM", detail: "Annual General Meeting scheduled", date: "Upcoming",
+                          rows: [["Meeting", "Annual General Meeting"], ["Status", "Upcoming"], ["Summary", "Approval of accounts, dividend & auditor re-appointment."]] as [string, string][] },
+                        { id: "m-split", type: "Bonus / Split", detail: "No recent bonus or split announced", date: "—",
+                          rows: [["Ratio", "N.A."], ["Ex-Date", "N.A."], ["Note", "No corporate action of this type in the recent history."]] as [string, string][] },
+                        { id: "m-bb", type: "Buyback", detail: "No active buyback", date: "—",
+                          rows: [["Status", "None active"], ["Note", "No open buyback tender at this time."]] as [string, string][] },
+                      ].filter(Boolean) as { id: string; type: string; detail: string; date: string; rows: [string, string][] }[];
                       return (
                         <div className="flex flex-col gap-2.5">
-                          {actions.map((a, i) => (
-                            <div key={i} className="flex items-center justify-between p-3.5 rounded-xl bg-secondary/40 border border-border/60">
-                              <div className="flex-1 min-w-0">
-                                <p className="text-sm font-semibold text-foreground font-['Space_Grotesk']">{a.type}</p>
-                                <p className="text-xs text-muted-foreground mt-0.5">{a.detail}</p>
+                          {actions.map((a) => {
+                            const open = expandedCaId === a.id;
+                            return (
+                              <div key={a.id} className="rounded-xl bg-secondary/40 border border-border/60 overflow-hidden">
+                                <button
+                                  onClick={() => setExpandedCaId(open ? null : a.id)}
+                                  className="w-full flex items-center justify-between p-3.5 text-left"
+                                >
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-semibold text-foreground font-['Space_Grotesk']">{a.type}</p>
+                                    <p className="text-xs text-muted-foreground mt-0.5">{a.detail}</p>
+                                  </div>
+                                  <span className="text-[10px] text-primary font-medium ml-3 shrink-0">{a.date}</span>
+                                  <ChevronDown className={`w-4 h-4 ml-2 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
+                                </button>
+                                <AnimatePresence initial={false}>
+                                  {open && (
+                                    <motion.div
+                                      initial={{ height: 0, opacity: 0 }}
+                                      animate={{ height: "auto", opacity: 1 }}
+                                      exit={{ height: 0, opacity: 0 }}
+                                      transition={{ duration: 0.2 }}
+                                    >
+                                      <div className="px-3.5 pb-3.5 pt-1 grid grid-cols-2 gap-2 border-t border-border/50">
+                                        {a.rows.map(([k, v]) => (
+                                          <div key={k} className="rounded-lg bg-background/40 p-2">
+                                            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{k}</p>
+                                            <p className="text-xs font-semibold text-foreground mt-0.5 break-words">{v}</p>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </motion.div>
+                                  )}
+                                </AnimatePresence>
                               </div>
-                              <span className="text-[10px] text-primary font-medium ml-3 shrink-0">{a.date}</span>
-                            </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       );
                     })()
@@ -405,17 +494,54 @@ const CompanyDeepDive = ({ company, onBack }: CompanyDeepDiveProps) => {
                     </div>
                   ) : nse && nse.corporateActions.length > 0 ? (
                     <div className="flex flex-col gap-2.5">
-                      {nse.corporateActions.map((a) => (
-                        <div key={a.id} className="flex items-center justify-between p-3.5 rounded-xl bg-secondary/40 border border-border/60">
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-semibold text-foreground font-['Space_Grotesk'] truncate">{a.action_type}</p>
-                            <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{a.purpose || a.details || "—"}</p>
+                      {nse.corporateActions.map((a) => {
+                        const open = expandedCaId === a.id;
+                        const parsed = parseCaDetails(a, nse.financials?.face_value ?? null);
+                        return (
+                          <div key={a.id} className="rounded-xl bg-secondary/40 border border-border/60 overflow-hidden">
+                            <button
+                              onClick={() => setExpandedCaId(open ? null : a.id)}
+                              className="w-full flex items-center justify-between p-3.5 text-left"
+                            >
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-semibold text-foreground font-['Space_Grotesk'] truncate">{a.action_type}</p>
+                                <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{a.purpose || a.details || "—"}</p>
+                              </div>
+                              <span className="text-[10px] text-primary font-medium ml-3 shrink-0">
+                                {a.ex_date ? `Ex ${a.ex_date}` : a.record_date ? `Rec ${a.record_date}` : "—"}
+                              </span>
+                              <ChevronDown className={`w-4 h-4 ml-2 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
+                            </button>
+                            <AnimatePresence initial={false}>
+                              {open && (
+                                <motion.div
+                                  initial={{ height: 0, opacity: 0 }}
+                                  animate={{ height: "auto", opacity: 1 }}
+                                  exit={{ height: 0, opacity: 0 }}
+                                  transition={{ duration: 0.2 }}
+                                >
+                                  <div className="px-3.5 pb-3.5 pt-1 flex flex-col gap-2 border-t border-border/50">
+                                    <div className="grid grid-cols-2 gap-2">
+                                      {parsed.rows.map(([k, v]) => (
+                                        <div key={k} className="rounded-lg bg-background/40 p-2">
+                                          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{k}</p>
+                                          <p className="text-xs font-semibold text-foreground mt-0.5 break-words">{v}</p>
+                                        </div>
+                                      ))}
+                                    </div>
+                                    {parsed.summary && (
+                                      <div className="rounded-lg bg-background/40 p-2.5">
+                                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Summary</p>
+                                        <p className="text-xs text-foreground/90 leading-relaxed">{parsed.summary}</p>
+                                      </div>
+                                    )}
+                                  </div>
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
                           </div>
-                          <span className="text-[10px] text-primary font-medium ml-3 shrink-0">
-                            {a.ex_date ? `Ex ${a.ex_date}` : a.record_date ? `Rec ${a.record_date}` : "—"}
-                          </span>
-                        </div>
-                      ))}
+                        );
+                      })}
                       <p className="text-[10px] text-muted-foreground text-center mt-2">Sourced live from nseindia.com</p>
                     </div>
                   ) : (
